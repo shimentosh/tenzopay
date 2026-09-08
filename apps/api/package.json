@@ -1,0 +1,56 @@
+{
+  "name": "@tenzopay/api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "nest start --watch",
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:studio": "prisma studio",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.0.10",
+    "@nestjs/config": "^4.0.0",
+    "@nestjs/core": "^11.0.10",
+    "@nestjs/jwt": "^11.0.0",
+    "@nestjs/platform-express": "^11.0.10",
+    "@nestjs/schedule": "^5.0.1",
+    "@nestjs/throttler": "^6.4.0",
+    "@prisma/client": "^6.3.1",
+    "@tenzopay/shared": "*",
+    "argon2": "^0.41.1",
+    "cookie-parser": "^1.4.7",
+    "helmet": "^8.0.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.1",
+    "viem": "^2.22.10",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.2",
+    "@nestjs/schematics": "^11.0.0",
+    "@nestjs/testing": "^11.0.10",
+    "@swc/core": "^1.16.2",
+    "@types/cookie-parser": "^1.4.8",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.13.1",
+    "@types/pg": "^8.23.1",
+    "@types/supertest": "^7.2.1",
+    "pg": "^8.23.0",
+    "prisma": "^6.3.1",
+    "supertest": "^7.2.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3",
+    "unplugin-swc": "^1.6.0",
+    "vitest": "^3.0.5"
+  }
+}

@@ -1,0 +1,698 @@
+// TenzoPay database schema
+//
+// Money rules enforced by this schema:
+//  1. All monetary values are BigInt MINOR UNITS (cents / 1e-6 USDT). Never floats.
+//  2. Balances are NEVER stored as a mutable column. They are derived by summing
+//     immutable LedgerEntry rows. See LedgerService.getBalance().
+//  3. Every LedgerEntry belongs to a LedgerTransaction whose entries sum to zero.
+//  4. Uniqueness constraints make every external money event idempotent.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ===========================================================================
+// Identity
+// ===========================================================================
+
+enum UserStatus {
+  PENDING_VERIFICATION
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+model User {
+  id                String     @id @default(uuid()) @db.Uuid
+  email             String     @unique
+  passwordHash      String
+  firstName         String?
+  lastName          String?
+  phoneNumber       String?
+  status            UserStatus @default(PENDING_VERIFICATION)
+  emailVerifiedAt   DateTime?
+  verificationToken String?    @unique
+  resetToken        String?    @unique
+  resetTokenExpires DateTime?
+  lastLoginAt       DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  accountHolder  AccountHolder?
+  wallet         Wallet?
+  cards          Card[]
+  sessions       Session[]
+  kycRecords     KycRecord[]
+  notifications  Notification[]
+  deposits       Deposit[]
+  ledgerAccounts LedgerAccount[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@map("users")
+}
+
+model Session {
+  id               String    @id @default(uuid()) @db.Uuid
+  userId           String    @db.Uuid
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // SHA-256 of the refresh token. The raw token is never stored.
+  refreshTokenHash String    @unique
+  userAgent        String?
+  ipAddress        String?
+  expiresAt        DateTime
+  revokedAt        DateTime?
+  // Set when a already-rotated token is replayed -> whole family is revoked.
+  replacedById     String?   @db.Uuid
+  createdAt        DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+// ===========================================================================
+// Admin + RBAC
+// ===========================================================================
+
+enum AdminRole {
+  SUPER_ADMIN
+  ADMIN
+  FINANCE
+  RISK
+  SUPPORT
+}
+
+model AdminUser {
+  id           String    @id @default(uuid()) @db.Uuid
+  email        String    @unique
+  passwordHash String
+  name         String
+  role         AdminRole @default(SUPPORT)
+  isActive     Boolean   @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  auditLogs    AuditLog[]
+  adminActions AdminAction[]
+
+  @@index([role])
+  @@map("admin_users")
+}
+
+// ===========================================================================
+// KYC / account holder (Lithic)
+// ===========================================================================
+
+enum KycStatus {
+  NOT_STARTED
+  PENDING_REVIEW
+  PENDING_DOCUMENT
+  ACCEPTED
+  REJECTED
+}
+
+model AccountHolder {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @unique @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Lithic identifiers. Unique so a retry can never create a second holder.
+  providerName             String    @default("lithic")
+  providerAccountHolderToken String? @unique
+  providerAccountToken     String?   @unique
+
+  status        KycStatus @default(NOT_STARTED)
+  statusReasons String[]  @default([])
+  workflow      String? // e.g. KYC_BASIC
+  // No raw government ID is stored. Only a one-way hash for duplicate detection.
+  governmentIdHash String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@map("account_holders")
+}
+
+model KycRecord {
+  id        String    @id @default(uuid()) @db.Uuid
+  userId    String    @db.Uuid
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    KycStatus
+  provider  String    @default("lithic")
+  reasons   String[]  @default([])
+  rawResult Json?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, createdAt])
+  @@map("kyc_records")
+}
+
+// ===========================================================================
+// Wallet + double-entry ledger
+// ===========================================================================
+
+model Wallet {
+  id       String @id @default(uuid()) @db.Uuid
+  userId   String @unique @db.Uuid
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency String @default("USDT")
+
+  depositAddresses DepositAddress[]
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  @@map("wallets")
+}
+
+/// USER_AVAILABLE / USER_HELD are per-user. SYSTEM_* are singletons.
+enum LedgerAccountKind {
+  USER_AVAILABLE
+  USER_HELD
+  SYSTEM_DEPOSIT_CLEARING
+  SYSTEM_CARD_SETTLEMENT
+  SYSTEM_FEE_REVENUE
+  SYSTEM_ADJUSTMENT
+}
+
+model LedgerAccount {
+  id       String            @id @default(uuid()) @db.Uuid
+  kind     LedgerAccountKind
+  // null for SYSTEM_* accounts
+  userId   String?           @db.Uuid
+  user     User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  currency String            @default("USDT")
+
+  entries   LedgerEntry[]
+  createdAt DateTime      @default(now())
+
+  // One account of each kind per user; one global account per SYSTEM_* kind.
+  @@unique([kind, userId, currency])
+  @@index([userId])
+  @@map("ledger_accounts")
+}
+
+enum LedgerTransactionType {
+  DEPOSIT_PENDING
+  DEPOSIT_CONFIRMED
+  DEPOSIT_REVERSED
+  CARD_AUTHORIZATION
+  CARD_AUTHORIZATION_REVERSAL
+  CARD_SETTLEMENT
+  CARD_REFUND
+  FEE
+  ADMIN_ADJUSTMENT
+}
+
+/// A balanced group of entries. Entries within one transaction MUST sum to zero.
+model LedgerTransaction {
+  id     String                @id @default(uuid()) @db.Uuid
+  type   LedgerTransactionType
+  /// Natural key of the real-world event, e.g. "deposit:<id>:confirm" or
+  /// "auth:<lithicToken>". UNIQUE — this is what makes posting idempotent.
+  idempotencyKey String         @unique
+  description    String?
+  metadata       Json?
+  createdAt      DateTime       @default(now())
+
+  entries LedgerEntry[]
+
+  @@index([type, createdAt])
+  @@map("ledger_transactions")
+}
+
+enum LedgerDirection {
+  DEBIT
+  CREDIT
+}
+
+/// Immutable. There is deliberately no update path in the application layer.
+model LedgerEntry {
+  id            String            @id @default(uuid()) @db.Uuid
+  transactionId String            @db.Uuid
+  transaction   LedgerTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  accountId     String            @db.Uuid
+  account       LedgerAccount     @relation(fields: [accountId], references: [id])
+
+  direction LedgerDirection
+  /// Always positive. Direction carries the sign.
+  amount    BigInt
+  currency  String          @default("USDT")
+  createdAt DateTime        @default(now())
+
+  @@index([accountId, createdAt])
+  @@index([transactionId])
+  @@map("ledger_entries")
+}
+
+// ===========================================================================
+// Deposits
+// ===========================================================================
+
+enum BlockchainNetwork {
+  ETHEREUM_MAINNET
+  ETHEREUM_SEPOLIA
+}
+
+enum DepositAddressStatus {
+  ACTIVE
+  RETIRED
+}
+
+model DepositAddress {
+  id       String            @id @default(uuid()) @db.Uuid
+  walletId String            @db.Uuid
+  wallet   Wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  network  BlockchainNetwork
+  address  String
+  /// BIP-44 index: m/44'/60'/0'/0/{derivationIndex}. Derived from an xpub only.
+  derivationIndex Int
+  status   DepositAddressStatus @default(ACTIVE)
+  /// True when the address exists only for demo mode and can never receive real funds.
+  isDemo   Boolean           @default(false)
+  registeredWithProvider Boolean @default(false)
+  createdAt DateTime         @default(now())
+
+  deposits Deposit[]
+
+  @@unique([network, address])
+  @@unique([walletId, network])
+  @@unique([network, derivationIndex])
+  @@map("deposit_addresses")
+}
+
+enum DepositStatus {
+  PENDING
+  DETECTED
+  CONFIRMING
+  CONFIRMED
+  FAILED
+  ORPHANED
+}
+
+enum DepositSource {
+  ONCHAIN
+  DEMO
+}
+
+model Deposit {
+  id       String @id @default(uuid()) @db.Uuid
+  userId   String @db.Uuid
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addressId String? @db.Uuid
+  address  DepositAddress? @relation(fields: [addressId], references: [id])
+
+  network       BlockchainNetwork
+  /// Minor units (6dp for USDT)
+  amount        BigInt
+  currency      String            @default("USDT")
+  status        DepositStatus     @default(PENDING)
+  source        DepositSource     @default(ONCHAIN)
+
+  txHash        String?
+  /// Index of the ERC-20 Transfer log inside the tx. One tx may hold several
+  /// transfers, so (network, txHash, logIndex) is the true natural key.
+  logIndex      Int?
+  fromAddress   String?
+  toAddress     String?
+  contractAddress String?
+  blockNumber   BigInt?
+  confirmations Int               @default(0)
+  requiredConfirmations Int        @default(12)
+
+  detectedAt  DateTime?
+  confirmedAt DateTime?
+  failureReason String?
+  /// Set once the ledger credit has been posted. Guards against double credit.
+  ledgerTransactionId String?     @unique @db.Uuid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // THE anti-double-credit constraint.
+  @@unique([network, txHash, logIndex])
+  @@index([userId, status])
+  @@index([status, createdAt])
+  @@map("deposits")
+}
+
+/// Raw chain observations, kept for audit/forensics independent of Deposit state.
+model BlockchainTransaction {
+  id        String            @id @default(uuid()) @db.Uuid
+  network   BlockchainNetwork
+  txHash    String
+  logIndex  Int
+  blockNumber BigInt
+  blockHash String?
+  fromAddress String
+  toAddress   String
+  contractAddress String
+  rawValue  String
+  amount    BigInt
+  observedAt DateTime         @default(now())
+  raw       Json?
+
+  @@unique([network, txHash, logIndex])
+  @@index([toAddress])
+  @@map("blockchain_transactions")
+}
+
+// ===========================================================================
+// Cards
+// ===========================================================================
+
+/// Maps 1:1 to Lithic states: ACTIVE->OPEN, FROZEN->PAUSED, CLOSED->CLOSED.
+enum CardStatus {
+  ACTIVE
+  FROZEN
+  CLOSED
+}
+
+enum SpendLimitDuration {
+  TRANSACTION
+  DAILY
+  MONTHLY
+  ANNUALLY
+  FOREVER
+}
+
+model Card {
+  id     String @id @default(uuid()) @db.Uuid
+  userId String @db.Uuid
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  name         String
+  providerName String @default("lithic")
+  /// Lithic card token. Unique so a retried create cannot duplicate a card.
+  providerCardToken String @unique
+  providerAccountToken String?
+
+  /// Last four only. Full PAN/CVV are NEVER stored — revealed via Lithic's
+  /// embed iframe directly to the browser.
+  lastFour String
+  expMonth String
+  expYear  String
+  network  String @default("VISA")
+  cardType String @default("VIRTUAL")
+
+  status CardStatus @default(ACTIVE)
+
+  /// Mirror of the Lithic card-level spend limit (minor units, USD cents).
+  spendLimit         BigInt?
+  spendLimitDuration SpendLimitDuration @default(MONTHLY)
+  /// TenzoPay-enforced limits, checked by ASA against the shared balance.
+  dailyLimit         BigInt?
+  monthlyLimit       BigInt?
+  perTransactionLimit BigInt?
+
+  lastSyncedAt DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  rules        CardRule[]
+  transactions CardTransaction[]
+
+  @@index([userId, status])
+  @@map("cards")
+}
+
+enum CardRuleType {
+  VELOCITY_LIMIT
+  CONDITIONAL_ACTION
+}
+
+enum CardRuleState {
+  DRAFT
+  SHADOWING
+  ACTIVE
+  INACTIVE
+}
+
+model CardRule {
+  id     String @id @default(uuid()) @db.Uuid
+  cardId String @db.Uuid
+  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+
+  /// Lithic /v2/auth_rules token
+  providerRuleToken String?       @unique
+  type              CardRuleType  @default(VELOCITY_LIMIT)
+  state             CardRuleState @default(DRAFT)
+  /// DAY | MONTH | CUSTOM ...
+  period            String
+  limitAmount       BigInt?
+  limitCount        Int?
+  parameters        Json?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  @@index([cardId])
+  @@map("card_rules")
+}
+
+// ===========================================================================
+// Card transactions + authorizations
+// ===========================================================================
+
+enum CardTransactionStatus {
+  PENDING
+  SETTLED
+  DECLINED
+  REVERSED
+  EXPIRED
+  REFUNDED
+}
+
+model CardTransaction {
+  id     String @id @default(uuid()) @db.Uuid
+  cardId String @db.Uuid
+  card   Card   @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  userId String @db.Uuid
+
+  /// Lithic transaction token — unique, drives webhook idempotency.
+  providerTransactionToken String @unique
+
+  status         CardTransactionStatus @default(PENDING)
+  /// Minor units, USD cents
+  amount         BigInt
+  settledAmount  BigInt?
+  currency       String                @default("USD")
+  merchantName   String?
+  merchantCategory String?
+  mcc            String?
+  merchantCountry String?
+  networkResult  String?
+  declineReason  String?
+
+  authorizedAt DateTime?
+  settledAt    DateTime?
+  /// Ledger transaction that placed the hold, so it can be released precisely.
+  holdLedgerTransactionId String? @db.Uuid
+  settleLedgerTransactionId String? @db.Uuid
+
+  raw       Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  authorizations AuthorizationEvent[]
+
+  @@index([userId, createdAt])
+  @@index([cardId, createdAt])
+  @@index([status])
+  @@map("card_transactions")
+}
+
+enum AuthorizationDecision {
+  APPROVED
+  INSUFFICIENT_FUNDS
+  VELOCITY_EXCEEDED
+  CARD_PAUSED
+  CARD_CLOSED
+  UNAUTHORIZED_MERCHANT
+  SUSPECTED_FRAUD
+  ERROR
+}
+
+/// One row per ASA callback. Deduped on providerEventToken so a Lithic retry
+/// re-uses the original decision instead of placing a second hold.
+model AuthorizationEvent {
+  id                String  @id @default(uuid()) @db.Uuid
+  transactionId     String? @db.Uuid
+  transaction       CardTransaction? @relation(fields: [transactionId], references: [id])
+  providerEventToken String @unique
+  cardToken         String
+  userId            String? @db.Uuid
+
+  amount            BigInt
+  decision          AuthorizationDecision
+  reason            String?
+  availableBalanceAtDecision BigInt?
+  latencyMs         Int?
+  raw               Json?
+  createdAt         DateTime @default(now())
+
+  @@index([cardToken, createdAt])
+  @@map("authorization_events")
+}
+
+// ===========================================================================
+// Webhooks + idempotency
+// ===========================================================================
+
+enum WebhookProvider {
+  LITHIC
+  ALCHEMY
+}
+
+enum WebhookStatus {
+  RECEIVED
+  PROCESSING
+  PROCESSED
+  FAILED
+  DEAD_LETTER
+  SKIPPED
+}
+
+model WebhookEvent {
+  id          String          @id @default(uuid()) @db.Uuid
+  provider    WebhookProvider
+  /// Provider event id (webhook-id / Alchemy id). UNIQUE per provider so the
+  /// same delivery can never be processed twice.
+  eventId     String
+  eventType   String
+  payloadHash String
+  payload     Json
+  status      WebhookStatus   @default(RECEIVED)
+  retryCount  Int             @default(0)
+  error       String?
+  receivedAt  DateTime        @default(now())
+  processedAt DateTime?
+
+  @@unique([provider, eventId])
+  @@index([status, receivedAt])
+  @@index([eventType])
+  @@map("webhook_events")
+}
+
+/// Generic idempotency for inbound API mutations (e.g. create-card retries).
+model IdempotencyKey {
+  id         String   @id @default(uuid()) @db.Uuid
+  key        String
+  scope      String
+  userId     String?  @db.Uuid
+  requestHash String
+  response   Json?
+  statusCode Int?
+  createdAt  DateTime @default(now())
+
+  @@unique([scope, key])
+  @@index([createdAt])
+  @@map("idempotency_keys")
+}
+
+// ===========================================================================
+// Fees, audit, notifications
+// ===========================================================================
+
+enum FeeType {
+  DEPOSIT
+  CARD_ISSUANCE
+  FX
+  MONTHLY
+}
+
+model Fee {
+  id       String  @id @default(uuid()) @db.Uuid
+  userId   String  @db.Uuid
+  type     FeeType
+  amount   BigInt
+  currency String  @default("USDT")
+  /// Set once charged, links to the balanced posting.
+  ledgerTransactionId String? @unique @db.Uuid
+  description String?
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("fees")
+}
+
+model AuditLog {
+  id          String     @id @default(uuid()) @db.Uuid
+  adminUserId String?    @db.Uuid
+  adminUser   AdminUser? @relation(fields: [adminUserId], references: [id])
+  actorType   String     @default("SYSTEM") // SYSTEM | ADMIN | USER
+  actorId     String?
+  action      String
+  entityType  String?
+  entityId    String?
+  before      Json?
+  after       Json?
+  reason      String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime   @default(now())
+
+  @@index([entityType, entityId])
+  @@index([adminUserId, createdAt])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+enum AdminActionType {
+  LEDGER_ADJUSTMENT
+  FREEZE_USER
+  UNFREEZE_USER
+  FREEZE_CARD
+  CLOSE_CARD
+  RETRY_DEPOSIT_RECONCILIATION
+  REPLAY_WEBHOOK
+  KYC_OVERRIDE
+}
+
+/// Every privileged admin operation, with a mandatory reason.
+model AdminAction {
+  id          String          @id @default(uuid()) @db.Uuid
+  adminUserId String          @db.Uuid
+  adminUser   AdminUser       @relation(fields: [adminUserId], references: [id])
+  type        AdminActionType
+  targetType  String
+  targetId    String
+  reason      String
+  amount      BigInt?
+  metadata    Json?
+  createdAt   DateTime        @default(now())
+
+  @@index([adminUserId, createdAt])
+  @@index([type, createdAt])
+  @@map("admin_actions")
+}
+
+enum NotificationType {
+  DEPOSIT_CONFIRMED
+  DEPOSIT_DETECTED
+  CARD_CREATED
+  CARD_FROZEN
+  TRANSACTION_DECLINED
+  KYC_UPDATE
+  SECURITY
+}
+
+model Notification {
+  id     String           @id @default(uuid()) @db.Uuid
+  userId String           @db.Uuid
+  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type   NotificationType
+  title  String
+  body   String
+  readAt DateTime?
+  metadata Json?
+  createdAt DateTime      @default(now())
+
+  @@index([userId, readAt])
+  @@map("notifications")
+}

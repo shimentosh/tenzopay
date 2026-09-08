@@ -1,0 +1,23 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: tenzopay-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: tenzopay
+    # Host port 55432 on purpose: this machine already runs a local Postgres
+    # bound to both 5432 and 5433, which shadows the container mapping.
+    ports:
+      - '55432:5432'
+    volumes:
+      - tenzopay_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d tenzopay']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  tenzopay_pgdata:

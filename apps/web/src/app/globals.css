@@ -1,0 +1,339 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+/* Guest-side (marketing) tokens. Adds the landing palette and type scale
+   without touching the semantic tokens below. See tailwind.config.ts. */
+@config '../../tailwind.config.ts';
+
+@custom-variant dark (&:is(.dark *));
+
+/**
+ * TenzoPay design system.
+ *
+ * shadcn/ui provides the component layer. This file supplies the *palette* it
+ * renders in, by pointing shadcn's semantic tokens (--primary, --background,
+ * --muted …) at TenzoPay's own indigo/ink scales. That is the whole trick:
+ * every shadcn component then inherits the brand automatically instead of
+ * shipping the default slate look.
+ *
+ * Direction: a serious financial product. Light, quiet surfaces; one confident
+ * indigo accent; numbers given room to be the loudest thing on the page.
+ * No gradients-as-decoration, no glass, no neon.
+ */
+
+/* --------------------------------------------------------------- Palette -- */
+
+@theme {
+  /* Brand — deep indigo, used sparingly and with intent. */
+  --color-brand-50: oklch(0.97 0.014 275);
+  --color-brand-100: oklch(0.94 0.03 275);
+  --color-brand-200: oklch(0.88 0.055 275);
+  --color-brand-300: oklch(0.79 0.09 275);
+  --color-brand-400: oklch(0.68 0.14 275);
+  --color-brand-500: oklch(0.58 0.18 274);
+  --color-brand-600: oklch(0.50 0.19 273);
+  --color-brand-700: oklch(0.43 0.17 272);
+  --color-brand-800: oklch(0.35 0.13 271);
+  --color-brand-900: oklch(0.27 0.09 270);
+  --color-brand-950: oklch(0.19 0.06 270);
+
+  /* Ink — cool, navy-leaning neutrals for text and chrome. */
+  --color-ink-50: oklch(0.985 0.002 265);
+  --color-ink-100: oklch(0.968 0.004 265);
+  --color-ink-200: oklch(0.925 0.007 265);
+  --color-ink-300: oklch(0.868 0.011 265);
+  --color-ink-400: oklch(0.705 0.017 265);
+  --color-ink-500: oklch(0.578 0.02 265);
+  --color-ink-600: oklch(0.462 0.022 265);
+  --color-ink-700: oklch(0.379 0.023 265);
+  --color-ink-800: oklch(0.284 0.022 265);
+  --color-ink-900: oklch(0.221 0.022 266);
+  --color-ink-950: oklch(0.145 0.02 266);
+
+  /* Semantic */
+  --color-positive: oklch(0.62 0.15 155);
+  --color-positive-soft: oklch(0.95 0.04 155);
+  --color-warning: oklch(0.75 0.15 75);
+  --color-warning-soft: oklch(0.96 0.05 85);
+  --color-critical: oklch(0.58 0.20 25);
+  --color-critical-soft: oklch(0.95 0.04 25);
+
+  --color-canvas: oklch(0.976 0.003 265);
+  --color-surface: oklch(1 0 0);
+
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --radius-panel: 1.25rem;
+
+  /* Shadows: shallow and cool. Financial UI should feel printed, not floating. */
+  --shadow-subtle: 0 1px 2px 0 oklch(0.145 0.02 266 / 0.04),
+    0 1px 3px 0 oklch(0.145 0.02 266 / 0.06);
+  --shadow-raised: 0 2px 4px -1px oklch(0.145 0.02 266 / 0.05),
+    0 8px 16px -4px oklch(0.145 0.02 266 / 0.08);
+  --shadow-card: 0 12px 32px -8px oklch(0.19 0.06 270 / 0.28);
+}
+
+/* ------------------------------------------------- shadcn semantic tokens -- */
+
+:root {
+  --radius: 0.75rem;
+
+  --background: oklch(0.976 0.003 265); /* canvas */
+  --foreground: oklch(0.221 0.022 266); /* ink-900 */
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.221 0.022 266);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.221 0.022 266);
+
+  /* The brand accent. Every default shadcn Button inherits this. */
+  --primary: oklch(0.50 0.19 273); /* brand-600 */
+  --primary-foreground: oklch(1 0 0);
+
+  --secondary: oklch(0.968 0.004 265); /* ink-100 */
+  --secondary-foreground: oklch(0.284 0.022 265);
+
+  --muted: oklch(0.968 0.004 265);
+  --muted-foreground: oklch(0.578 0.02 265); /* ink-500 */
+
+  --accent: oklch(0.97 0.014 275); /* brand-50 */
+  --accent-foreground: oklch(0.43 0.17 272); /* brand-700 */
+
+  --destructive: oklch(0.58 0.20 25);
+  --destructive-foreground: oklch(1 0 0);
+
+  --border: oklch(0.925 0.007 265); /* ink-200 */
+  --input: oklch(0.925 0.007 265);
+  --ring: oklch(0.58 0.18 274); /* brand-500 */
+
+  /* Charts: brand-led, then cool neutrals. Distinguishable without colour. */
+  --chart-1: oklch(0.50 0.19 273);
+  --chart-2: oklch(0.68 0.14 275);
+  --chart-3: oklch(0.62 0.15 155);
+  --chart-4: oklch(0.75 0.15 75);
+  --chart-5: oklch(0.578 0.02 265);
+
+  --sidebar: oklch(1 0 0);
+  --sidebar-foreground: oklch(0.221 0.022 266);
+  --sidebar-primary: oklch(0.50 0.19 273);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.97 0.014 275);
+  --sidebar-accent-foreground: oklch(0.43 0.17 272);
+  --sidebar-border: oklch(0.925 0.007 265);
+  --sidebar-ring: oklch(0.58 0.18 274);
+}
+
+/* ----------------------------------------------------------------- Dark -- */
+
+/**
+ * Dark theme.
+ *
+ * Deep navy rather than pure black: on an OLED panel a #000 ground makes
+ * white numerals bloom and smear when you scroll, which is exactly the wrong
+ * property for a screen full of figures. Chroma is pulled down and lightness
+ * up on the brand so the accent stays legible without vibrating against the
+ * dark ground.
+ */
+.dark {
+  --background: oklch(0.165 0.018 266);
+  --foreground: oklch(0.955 0.004 265);
+
+  --card: oklch(0.205 0.019 266);
+  --card-foreground: oklch(0.955 0.004 265);
+  --popover: oklch(0.225 0.02 266);
+  --popover-foreground: oklch(0.955 0.004 265);
+
+  /* Lighter and less saturated than the light-theme brand, so it reads as an
+     accent rather than a glowing block. */
+  --primary: oklch(0.70 0.135 275);
+  --primary-foreground: oklch(0.17 0.03 270);
+
+  --secondary: oklch(0.26 0.02 266);
+  --secondary-foreground: oklch(0.93 0.005 265);
+
+  --muted: oklch(0.255 0.019 266);
+  --muted-foreground: oklch(0.70 0.017 265);
+
+  --accent: oklch(0.29 0.045 272);
+  --accent-foreground: oklch(0.86 0.075 275);
+
+  --destructive: oklch(0.68 0.17 25);
+  --destructive-foreground: oklch(0.17 0.02 266);
+
+  --border: oklch(0.30 0.018 266);
+  --input: oklch(0.32 0.018 266);
+  --ring: oklch(0.62 0.14 274);
+
+  --chart-1: oklch(0.70 0.135 275);
+  --chart-2: oklch(0.79 0.09 275);
+  --chart-3: oklch(0.72 0.14 155);
+  --chart-4: oklch(0.80 0.14 75);
+  --chart-5: oklch(0.70 0.017 265);
+
+  --sidebar: oklch(0.185 0.019 266);
+  --sidebar-foreground: oklch(0.955 0.004 265);
+  --sidebar-primary: oklch(0.70 0.135 275);
+  --sidebar-primary-foreground: oklch(0.17 0.03 270);
+  --sidebar-accent: oklch(0.29 0.045 272);
+  --sidebar-accent-foreground: oklch(0.86 0.075 275);
+  --sidebar-border: oklch(0.30 0.018 266);
+  --sidebar-ring: oklch(0.62 0.14 274);
+
+  /* Semantic colours need their own dark values too — the light-theme
+     "soft" tints are near-white and would blow out on a dark ground. */
+  --color-positive: oklch(0.72 0.14 155);
+  --color-positive-soft: oklch(0.30 0.055 155);
+  --color-warning: oklch(0.80 0.14 75);
+  --color-warning-soft: oklch(0.32 0.06 75);
+  --color-critical: oklch(0.68 0.17 25);
+  --color-critical-soft: oklch(0.31 0.07 25);
+
+  --color-surface: oklch(0.205 0.019 266);
+  --color-canvas: oklch(0.165 0.018 266);
+
+  /* Shadows carry almost no weight on a dark ground; borders do the work. */
+  --shadow-subtle: 0 1px 2px 0 oklch(0 0 0 / 0.3);
+  --shadow-raised: 0 4px 12px -2px oklch(0 0 0 / 0.4);
+  --shadow-card: 0 12px 32px -8px oklch(0 0 0 / 0.55);
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ------------------------------------------------------------------ Base -- */
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Tabular figures everywhere money appears, so columns align and digits do
+     not jitter as values update. */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: 'tnum';
+  }
+
+  ::selection {
+    background-color: var(--color-brand-100);
+    color: var(--color-brand-900);
+  }
+
+  /* Respect users who have asked for less motion. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
+
+/* ------------------------------------------------------------- Utilities -- */
+
+@layer utilities {
+  .card-surface {
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-ink-200);
+    border-radius: var(--radius-panel);
+    box-shadow: var(--shadow-subtle);
+  }
+
+  /* The virtual card face. Deep navy so it reads as the object it represents. */
+  .card-face {
+    background:
+      radial-gradient(
+        120% 120% at 88% 8%,
+        oklch(0.34 0.11 272 / 0.9) 0%,
+        transparent 55%
+      ),
+      linear-gradient(
+        142deg,
+        var(--color-ink-950) 0%,
+        var(--color-brand-950) 52%,
+        var(--color-brand-900) 100%
+      );
+  }
+
+  .card-face-frozen {
+    background: linear-gradient(
+      142deg,
+      var(--color-ink-700) 0%,
+      var(--color-ink-600) 100%
+    );
+  }
+
+  .card-face-closed {
+    background: linear-gradient(
+      142deg,
+      var(--color-ink-500) 0%,
+      var(--color-ink-400) 100%
+    );
+  }
+
+  .animate-in-up {
+    animation: in-up 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+}
+
+@keyframes in-up {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}

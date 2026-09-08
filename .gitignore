@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+
+# builds
+.next/
+out/
+dist/
+build/
+*.tsbuildinfo
+
+# env — .env.example is committed, real secrets are not
+.env
+.env.*
+!.env.example
+
+# test / coverage
+coverage/
+
+# logs
+*.log
+npm-debug.log*
+
+# editors / os
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json
+
+# next
+next-env.d.ts
+.vercel
