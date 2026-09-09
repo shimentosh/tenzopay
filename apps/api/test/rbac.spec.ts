@@ -344,4 +344,102 @@ describe('admin RBAC', () => {
       expect(cards.body.data[0].lastFour).toHaveLength(4);
     });
   });
+
+  describe('staff switcher exposure', () => {
+    /**
+     * The customer portal shows a "Console" link when the signed-in customer's
+     * email also has an active console account. It must never appear for
+     * anyone else, and it must never carry anything but a URL — it is a
+     * navigation hint, not a capability.
+     */
+    async function registerCustomer(email: string) {
+      const response = await request(server).post('/api/auth/register').send({
+        email,
+        password: 'CorrectHorse123',
+        firstName: 'Switch',
+        lastName: 'Tester',
+      });
+      return `tenzo_access=${cookieFrom(response.headers, 'tenzo_access')}`;
+    }
+
+    it('is absent for an ordinary customer', async () => {
+      const userCookie = await registerCustomer('ordinary@tenzopay.dev');
+
+      const me = await request(server)
+        .get('/api/auth/me')
+        .set('Cookie', userCookie)
+        .expect(200);
+
+      expect(me.body.staffAccess).toBeNull();
+    });
+
+    it('appears when the same email holds an active console account', async () => {
+      const email = 'dual@tenzopay.dev';
+      await prisma.adminUser.create({
+        data: {
+          email,
+          name: 'Dual Role',
+          role: AdminRole.SUPPORT,
+          passwordHash: 'unused-for-this-test',
+        },
+      });
+
+      const userCookie = await registerCustomer(email);
+
+      const me = await request(server)
+        .get('/api/auth/me')
+        .set('Cookie', userCookie)
+        .expect(200);
+
+      expect(me.body.staffAccess).toMatchObject({ role: 'SUPPORT' });
+      expect(me.body.staffAccess.consoleUrl).toMatch(/^https?:\/\//);
+      // A URL and a role label — nothing that could act as a credential.
+      expect(Object.keys(me.body.staffAccess).sort()).toEqual(['consoleUrl', 'role']);
+    });
+
+    it('disappears once the console account is deactivated', async () => {
+      const email = 'revoked@tenzopay.dev';
+      const admin = await prisma.adminUser.create({
+        data: {
+          email,
+          name: 'Revoked',
+          role: AdminRole.ADMIN,
+          passwordHash: 'unused-for-this-test',
+        },
+      });
+
+      const userCookie = await registerCustomer(email);
+      await prisma.adminUser.update({
+        where: { id: admin.id },
+        data: { isActive: false },
+      });
+
+      const me = await request(server)
+        .get('/api/auth/me')
+        .set('Cookie', userCookie)
+        .expect(200);
+
+      expect(me.body.staffAccess).toBeNull();
+    });
+
+    it('grants no console access on its own', async () => {
+      const email = 'hint-only@tenzopay.dev';
+      await prisma.adminUser.create({
+        data: {
+          email,
+          name: 'Hint Only',
+          role: AdminRole.SUPER_ADMIN,
+          passwordHash: 'unused-for-this-test',
+        },
+      });
+
+      const userCookie = await registerCustomer(email);
+
+      // Holding a customer session for a staff email must not open the console.
+      await request(server)
+        .get('/api/admin/dashboard')
+        .set('Cookie', userCookie)
+        .expect(401);
+    });
+  });
 });

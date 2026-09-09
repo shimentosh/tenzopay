@@ -22,6 +22,16 @@ export type DepositStatus =
 
 export type AdminRole = 'SUPER_ADMIN' | 'ADMIN' | 'FINANCE' | 'RISK' | 'SUPPORT';
 
+/**
+ * Present only when the signed-in customer also holds an ACTIVE console
+ * account under the same email. It is a navigation hint — the console has its
+ * own origin, password and cookie, so this grants no permission whatsoever.
+ */
+export interface StaffAccess {
+  role: AdminRole;
+  consoleUrl: string;
+}
+
 export interface SessionUser {
   id: string;
   email: string;
@@ -29,6 +39,7 @@ export interface SessionUser {
   lastName: string | null;
   status: string;
   kycStatus: KycStatus;
+  staffAccess?: StaffAccess | null;
 }
 
 /**

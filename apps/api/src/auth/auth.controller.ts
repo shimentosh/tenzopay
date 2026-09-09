@@ -161,10 +161,36 @@ export class AuthController {
       },
     });
 
+    /**
+     * Staff link, for people who hold both a customer account and a console
+     * account under the same address.
+     *
+     * This is a NAVIGATION HINT AND NOTHING ELSE. It confers no permission:
+     * the console lives on its own origin, requires its own password, and
+     * issues its own cookie (`tenzo_admin_access`). Nothing here lets the
+     * customer app act as staff.
+     *
+     * Matching on email rather than on the presence of an admin cookie is
+     * deliberate — cookies are not shared once the two apps sit on different
+     * domains in production, and the link needs to work there too.
+     *
+     * The disclosure is bounded: only the authenticated owner of the customer
+     * account ever sees it, and all they learn is that their own address also
+     * has console access.
+     */
+    const staff = await this.prisma.adminUser.findUnique({
+      where: { email: record.email },
+      select: { role: true, isActive: true },
+    });
+
     return {
       ...record,
       kycStatus: record.accountHolder?.status ?? 'NOT_STARTED',
       kycReasons: record.accountHolder?.statusReasons ?? [],
+      staffAccess:
+        staff && staff.isActive
+          ? { role: staff.role, consoleUrl: this.config.adminUrl }
+          : null,
     };
   }
 
