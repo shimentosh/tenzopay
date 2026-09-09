@@ -100,11 +100,11 @@ export function GlobalSearch() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="hidden h-9 max-w-sm flex-1 items-center gap-2 rounded-lg border bg-muted/60 px-3 text-sm text-muted-foreground transition-colors hover:bg-muted sm:flex"
+        className="hidden h-11 w-full items-center gap-3 rounded-pill bg-surface-raised px-4 text-ui text-content-tertiary outline-none transition-colors duration-150 ease hover:bg-surface-raised-hover focus-visible:ring-2 focus-visible:ring-ring sm:flex"
       >
         <Search className="size-4 shrink-0" aria-hidden />
-        <span>Search cards and transactions…</span>
-        <kbd className="ml-auto hidden rounded border bg-card px-1.5 font-mono text-[10px] text-muted-foreground md:inline-block">
+        <span>Search</span>
+        <kbd className="ml-auto hidden rounded-md bg-surface-raised-hover px-1.5 font-mono text-caption text-content-tertiary md:inline-block">
           ⌘K
         </kbd>
       </button>
@@ -114,7 +114,7 @@ export function GlobalSearch() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Search"
-        className="rounded-lg p-2 text-muted-foreground hover:bg-muted sm:hidden"
+        className="rounded-full p-2 text-content-secondary transition-colors duration-150 ease hover:bg-surface-raised sm:hidden"
       >
         <Search className="size-[18px]" aria-hidden />
       </button>
@@ -144,7 +144,7 @@ export function GlobalSearch() {
                 >
                   <CreditCard aria-hidden />
                   <span className="flex-1 truncate">{card.name}</span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="text-caption text-muted-foreground">
                     •••• {card.lastFour}
                   </span>
                   {card.dailyLimit ? (
@@ -173,7 +173,7 @@ export function GlobalSearch() {
                     >
                       <Receipt aria-hidden />
                       <span className="flex-1 truncate">{row.description}</span>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-caption text-muted-foreground">
                         {relativeTime(row.createdAt)}
                       </span>
                       <CommandShortcut className="tnum">

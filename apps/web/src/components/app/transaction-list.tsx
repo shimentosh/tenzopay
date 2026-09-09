@@ -35,7 +35,7 @@ export function TransactionList({ rows }: { rows: TransactionRow[] }) {
 
   return (
     <>
-      <ul className="divide-y">
+      <ul>
         {rows.map((row) => {
           const incoming = !row.amount.startsWith('-');
           const magnitude = incoming ? row.amount : row.amount.slice(1);
@@ -45,33 +45,28 @@ export function TransactionList({ rows }: { rows: TransactionRow[] }) {
               <button
                 type="button"
                 onClick={() => setSelected(row)}
-                className="flex w-full items-center gap-3 px-5 py-3.5 text-left transition-colors hover:bg-muted/40"
+                className="flex w-full items-center gap-4 rounded-card px-3 py-4 text-left outline-none transition-colors duration-150 ease hover:bg-surface-raised focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
               >
                 <span
-                  className={cn(
-                    'flex size-9 shrink-0 items-center justify-center rounded-full',
-                    incoming
-                      ? 'bg-positive-soft text-[color-mix(in_oklch,var(--color-positive),black_15%)]'
-                      : 'bg-muted text-muted-foreground',
-                  )}
+                  className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-raised text-content-primary"
                   aria-hidden
                 >
                   {row.kind === 'DEPOSIT' ? (
-                    <Wallet className="size-4" />
+                    <Wallet className="size-5" />
                   ) : row.kind === 'CARD' ? (
-                    <CreditCard className="size-4" />
+                    <CreditCard className="size-5" />
                   ) : incoming ? (
-                    <ArrowDownLeft className="size-4" />
+                    <ArrowDownLeft className="size-5" />
                   ) : (
-                    <ArrowUpRight className="size-4" />
+                    <ArrowUpRight className="size-5" />
                   )}
                 </span>
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
+                  <p className="truncate text-ui font-semibold text-content-primary">
                     {row.description}
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="mt-0.5 truncate text-ui text-content-tertiary">
                     {row.cardName ? `${row.cardName} · ` : ''}
                     {row.cardLastFour ? `•••• ${row.cardLastFour} · ` : ''}
                     {relativeTime(row.createdAt)}
@@ -82,14 +77,16 @@ export function TransactionList({ rows }: { rows: TransactionRow[] }) {
                   <StatusBadge status={row.status} />
                 </div>
 
-                <span
-                  className={cn(
-                    'tnum shrink-0 text-sm font-semibold',
-                    incoming ? 'text-positive' : 'text-foreground',
-                  )}
-                >
-                  {incoming ? '+' : '−'}
-                  {money(magnitude, row.currency)}
+                <span className="shrink-0 text-right">
+                  <span
+                    className={cn(
+                      'tnum block text-value font-semibold',
+                      incoming ? 'text-positive' : 'text-content-primary',
+                    )}
+                  >
+                    {incoming ? '+' : '−'}
+                    {money(magnitude, row.currency)}
+                  </span>
                 </span>
               </button>
             </li>

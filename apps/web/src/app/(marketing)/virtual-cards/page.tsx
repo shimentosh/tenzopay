@@ -1,28 +1,12 @@
-import Link from 'next/link';
 import { Check, Minus } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { VirtualCard } from '@/components/virtual-card';
-import type { CardSummary } from '@tenzopay/shared';
+import { Button } from '@/components/marketing/ui/button';
+import { CardMockup } from '@/components/marketing/ui/card-mockup';
+import { Pill } from '@/components/marketing/ui/pill';
+import { Reveal } from '@/components/marketing/ui/reveal';
 
 export const metadata = {
   title: 'Cards',
   description: 'Virtual cards with per-card limits, drawing on one balance.',
-};
-
-const sample: CardSummary = {
-  id: 'sample',
-  name: 'Marketing',
-  lastFour: '4821',
-  expMonth: '09',
-  expYear: '2030',
-  network: 'VISA',
-  status: 'ACTIVE',
-  dailyLimit: '50000',
-  monthlyLimit: '500000',
-  perTransactionLimit: '25000',
-  spentToday: '18400',
-  spentThisMonth: '214000',
-  createdAt: new Date().toISOString(),
 };
 
 /**
@@ -40,100 +24,120 @@ const capabilities: { label: string; supported: boolean; note?: string }[] = [
   { label: 'Freeze and unfreeze instantly', supported: true },
   { label: 'Close permanently', supported: true },
   { label: 'Secure card number reveal', supported: true },
-  {
-    label: 'Contactless payments',
-    supported: false,
-    note: 'Requires a physical card',
-  },
+  { label: 'Contactless payments', supported: false, note: 'Requires a physical card' },
   { label: 'ATM withdrawals', supported: false, note: 'Requires a physical card' },
-  {
-    label: 'Chip and PIN at a terminal',
-    supported: false,
-    note: 'Requires a physical card',
-  },
+  { label: 'Chip and PIN at a terminal', supported: false, note: 'Requires a physical card' },
 ];
 
 export default function CardsPage() {
   return (
     <>
-      <section className="border-b border-border bg-card">
-        <div className="mx-auto grid max-w-5xl items-center gap-12 px-5 py-16 lg:grid-cols-2 lg:py-20">
+      <section
+        aria-labelledby="cards-page-heading"
+        className="border-b border-edge bg-bone pb-20 pt-[8.5rem] md:pb-24 md:pt-[10rem]"
+      >
+        <div className="mx-auto grid w-full max-w-container items-center gap-16 px-6 md:px-8 lg:grid-cols-2 lg:gap-8">
           <div>
-            <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-              A card for every purpose
-            </h1>
-            <p className="mt-4 text-[17px] leading-relaxed text-muted-foreground">
-              Issue a separate card for each vendor, campaign or team. Give each
-              one its own ceiling. Freeze any of them without touching the
-              others.
-            </p>
-            <div className="mt-7 flex flex-wrap gap-3">
-              <Button asChild size="lg">
-                <Link href="/signup">Create your first card</Link>
-              </Button>
-              <Button asChild size="lg" variant="secondary">
-                <Link href="/how-it-works">How it works</Link>
-              </Button>
-            </div>
+            <Reveal>
+              <Pill tone="mint">Cards</Pill>
+            </Reveal>
+            <Reveal delay={0.08}>
+              <h1 id="cards-page-heading" className="mt-7 font-display text-h1 font-medium text-forest">
+                A card for every purpose
+              </h1>
+            </Reveal>
+            <Reveal delay={0.16}>
+              <p className="mt-7 max-w-xl text-body-lg text-moss">
+                Issue a separate card for each vendor, campaign or team. Give each one its own
+                ceiling. Freeze any of them without touching the others.
+              </p>
+            </Reveal>
+            <Reveal delay={0.24}>
+              <div className="mt-9 flex flex-wrap gap-3">
+                <Button href="/signup" size="lg">
+                  Create your first card
+                </Button>
+                <Button href="/how-it-works" variant="secondary" size="lg">
+                  How it works
+                </Button>
+              </div>
+            </Reveal>
           </div>
 
-          <div className="mx-auto w-full max-w-sm">
-            <VirtualCard card={sample} />
-          </div>
+          <Reveal delay={0.16} scale>
+            <div className="mx-auto w-full max-w-[26rem]">
+              <CardMockup
+                tone="bright"
+                last4="4821"
+                holder="MARKETING"
+                expiry="09/30"
+                tilt
+                className="shadow-float"
+              />
+            </div>
+          </Reveal>
         </div>
       </section>
 
-      <section className="mx-auto max-w-3xl px-5 py-16">
-        <h2 className="text-xl font-semibold tracking-tight text-foreground">
-          What a TenzoPay card can and cannot do
-        </h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          TenzoPay issues virtual cards. Physical cards are not available.
-        </p>
+      <section aria-labelledby="capabilities-heading" className="bg-paper py-24 md:py-32">
+        <div className="mx-auto w-full max-w-container px-6 md:px-8">
+          <div className="mx-auto max-w-3xl">
+            <Reveal>
+              <h2 id="capabilities-heading" className="font-display text-h2 font-medium text-forest">
+                What a card can and cannot do
+              </h2>
+            </Reveal>
+            <Reveal delay={0.08}>
+              <p className="mt-5 text-body-lg text-moss">
+                TenzoPay issues virtual cards. Physical cards are not available, so the last three
+                rows are honest noes rather than a roadmap.
+              </p>
+            </Reveal>
 
-        <ul className="card-surface mt-6 divide-y divide-border">
-          {capabilities.map((capability) => (
-            <li
-              key={capability.label}
-              className="flex items-center gap-3 px-5 py-3.5"
-            >
-              {capability.supported ? (
-                <span
-                  className="flex size-5 shrink-0 items-center justify-center rounded-full bg-positive-soft"
-                  aria-hidden
-                >
-                  <Check className="size-3 text-positive" strokeWidth={3} />
-                </span>
-              ) : (
-                <span
-                  className="flex size-5 shrink-0 items-center justify-center rounded-full bg-muted"
-                  aria-hidden
-                >
-                  <Minus className="size-3 text-muted-foreground" strokeWidth={3} />
-                </span>
-              )}
+            <Reveal delay={0.16}>
+              <ul className="mt-10 divide-y divide-edge rounded-4xl border border-edge">
+                {capabilities.map((capability) => (
+                  <li key={capability.label} className="flex items-center gap-4 px-6 py-4">
+                    {capability.supported ? (
+                      <span
+                        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-bright"
+                        aria-hidden
+                      >
+                        <Check className="size-3.5 text-forest" strokeWidth={3} />
+                      </span>
+                    ) : (
+                      <span
+                        className="flex size-6 shrink-0 items-center justify-center rounded-full bg-sand"
+                        aria-hidden
+                      >
+                        <Minus className="size-3.5 text-moss" strokeWidth={3} />
+                      </span>
+                    )}
 
-              <span
-                className={
-                  capability.supported
-                    ? 'text-sm text-foreground'
-                    : 'text-sm text-muted-foreground'
-                }
-              >
-                {capability.label}
-              </span>
-              <span className="sr-only">
-                {capability.supported ? 'Supported' : 'Not supported'}
-              </span>
+                    <span
+                      className={
+                        capability.supported
+                          ? 'text-[0.9375rem] text-forest'
+                          : 'text-[0.9375rem] text-moss'
+                      }
+                    >
+                      {capability.label}
+                    </span>
+                    <span className="sr-only">
+                      {capability.supported ? 'Supported' : 'Not supported'}
+                    </span>
 
-              {capability.note ? (
-                <span className="ml-auto text-xs text-muted-foreground">
-                  {capability.note}
-                </span>
-              ) : null}
-            </li>
-          ))}
-        </ul>
+                    {capability.note ? (
+                      <span className="ml-auto hidden text-[0.75rem] text-moss sm:block">
+                        {capability.note}
+                      </span>
+                    ) : null}
+                  </li>
+                ))}
+              </ul>
+            </Reveal>
+          </div>
+        </div>
       </section>
     </>
   );

@@ -25,6 +25,9 @@ const config: Config = {
         sand: '#F0EEE4',
         edge: '#E4E4DF',
         coral: '#FFC091',
+        // Error text needs a dark tone: coral on paper is far below AA, and
+        // the brief requires AA for all body copy.
+        rust: '#8C2F0D',
       },
       fontFamily: {
         // `sans` is deliberately untouched — the app is already on Inter.

@@ -88,13 +88,13 @@ export function TransactionDetailSheet({
         <div className="space-y-6 px-4 pb-6">
           <div>
             <p
-              className={`tnum text-3xl font-semibold tracking-tight ${
+              className={`tnum text-display font-semibold ${
                 incoming ? 'text-positive' : 'text-foreground'
               }`}
             >
               {incoming ? '+' : '−'}
               {money(magnitude, row.currency)}
-              <span className="ml-1.5 text-base font-medium text-muted-foreground">
+              <span className="ml-1.5 text-value font-semibold text-muted-foreground">
                 {row.currency}
               </span>
             </p>
@@ -152,7 +152,7 @@ export function TransactionDetailSheet({
             <>
               <Separator />
               <div>
-                <p className="mb-3 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <p className="mb-3 text-caption text-content-tertiary">
                   Authorization timeline
                 </p>
                 <ol className="space-y-3">
@@ -172,14 +172,14 @@ export function TransactionDetailSheet({
                           />
                         )}
                         <div className="min-w-0 flex-1">
-                          <p className="text-sm font-medium text-foreground">
+                          <p className="text-ui font-semibold text-foreground">
                             {auth.decision.replace(/_/g, ' ').toLowerCase()}
                           </p>
-                          <p className="text-xs text-muted-foreground">
+                          <p className="text-caption text-muted-foreground">
                             {usd(auth.amount)}
                             {auth.reason ? ` · ${auth.reason.replace(/_/g, ' ')}` : ''}
                           </p>
-                          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground/70">
+                          <p className="mt-0.5 flex items-center gap-1 text-caption text-muted-foreground/70">
                             <Clock className="size-3" aria-hidden />
                             {formatDateTime(auth.createdAt)}
                             {auth.latencyMs !== null
@@ -213,11 +213,11 @@ function Row({
 }) {
   return (
     <div className="flex items-start justify-between gap-4">
-      <dt className="shrink-0 text-sm text-muted-foreground">{label}</dt>
+      <dt className="shrink-0 text-ui text-muted-foreground">{label}</dt>
       <dd
         className={[
-          'text-right text-sm font-medium text-foreground',
-          mono ? 'font-mono text-xs' : '',
+          'text-right text-ui font-semibold text-foreground',
+          mono ? 'font-mono text-caption' : '',
           wrap ? 'break-all' : 'truncate',
         ].join(' ')}
       >

@@ -1,4 +1,3 @@
-import Link from 'next/link';
 import {
   Ban,
   BellRing,
@@ -10,7 +9,9 @@ import {
   Snowflake,
   Wallet,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/marketing/ui/button';
+import { PageHero } from '@/components/marketing/ui/page-hero';
+import { Reveal, RevealGroup, RevealItem } from '@/components/marketing/ui/reveal';
 
 export const metadata = {
   title: 'Features',
@@ -83,45 +84,53 @@ const groups = [
 export default function FeaturesPage() {
   return (
     <>
-      <section className="border-b border-border bg-card">
-        <div className="mx-auto max-w-4xl px-5 py-16 lg:py-20">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Everything you need to run spending
-          </h1>
-          <p className="mt-4 max-w-2xl text-[17px] leading-relaxed text-muted-foreground">
-            TenzoPay is built around one idea: cards are spending instruments,
-            not separate wallets. Everything follows from that.
-          </p>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="Features"
+        title="Everything you need to run spending"
+        lead="TenzoPay is built around one idea: cards are spending instruments, not separate wallets. Everything else follows from that."
+      />
 
-      <div className="mx-auto max-w-5xl px-5 py-16">
-        {groups.map((group, index) => (
-          <section key={group.title} className={index > 0 ? 'mt-16' : ''}>
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              {group.title}
-            </h2>
-            <div className="mt-5 grid gap-6 md:grid-cols-3">
+      <div className="mx-auto w-full max-w-container px-6 py-24 md:px-8 md:py-32">
+        {groups.map((group, groupIndex) => (
+          <section
+            key={group.title}
+            aria-labelledby={`group-${group.title.toLowerCase()}`}
+            className={groupIndex > 0 ? 'mt-20 md:mt-24' : ''}
+          >
+            <Reveal>
+              <h2
+                id={`group-${group.title.toLowerCase()}`}
+                className="text-micro font-medium uppercase text-moss"
+              >
+                {group.title}
+              </h2>
+            </Reveal>
+
+            <RevealGroup className="mt-8 grid gap-6 md:grid-cols-3 md:gap-8" delayChildren={0.08}>
               {group.items.map((item) => (
-                <div key={item.title} className="card-surface p-6">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-accent text-primary">
-                    <item.icon className="size-5" aria-hidden />
-                  </div>
-                  <h3 className="mt-4 font-semibold text-foreground">{item.title}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                    {item.body}
-                  </p>
-                </div>
+                <RevealItem key={item.title}>
+                  <article className="group h-full rounded-4xl border border-edge bg-paper p-8 transition-colors duration-300 hover:border-bright">
+                    <span className="inline-flex size-12 items-center justify-center rounded-full bg-mint text-forest transition-transform duration-300 group-hover:scale-[1.08]">
+                      <item.icon className="size-5" aria-hidden />
+                    </span>
+                    <h3 className="mt-6 font-display text-[1.125rem] font-medium tracking-[-0.02em] text-forest">
+                      {item.title}
+                    </h3>
+                    <p className="mt-3 text-[0.9375rem] leading-relaxed text-moss">{item.body}</p>
+                  </article>
+                </RevealItem>
               ))}
-            </div>
+            </RevealGroup>
           </section>
         ))}
 
-        <div className="mt-16 text-center">
-          <Button asChild size="lg">
-            <Link href="/signup">Get started</Link>
-          </Button>
-        </div>
+        <Reveal delay={0.1}>
+          <div className="mt-20 flex justify-center">
+            <Button href="/signup" size="lg">
+              Get your card
+            </Button>
+          </div>
+        </Reveal>
       </div>
     </>
   );

@@ -1,6 +1,8 @@
-import Link from 'next/link';
 import { Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from '@/components/marketing/ui/button';
+import { PageHero } from '@/components/marketing/ui/page-hero';
+import { Pill } from '@/components/marketing/ui/pill';
+import { Reveal, RevealGroup, RevealItem } from '@/components/marketing/ui/reveal';
 
 export const metadata = {
   title: 'Pricing',
@@ -57,76 +59,76 @@ const tiers = [
 export default function PricingPage() {
   return (
     <>
-      <section className="border-b border-border bg-card">
-        <div className="mx-auto max-w-3xl px-5 py-16 text-center lg:py-20">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Simple pricing
-          </h1>
-          <p className="mx-auto mt-4 max-w-xl text-[17px] leading-relaxed text-muted-foreground">
-            No hidden charges. Network and blockchain fees, where they apply, are
-            shown before you confirm anything.
-          </p>
+      <PageHero
+        eyebrow="Pricing"
+        title="Simple pricing"
+        lead="No hidden charges. Network and blockchain fees, where they apply, are shown before you confirm anything."
+      />
+
+      <section aria-labelledby="tiers-heading" className="bg-paper py-24 md:py-32">
+        <div className="mx-auto w-full max-w-container px-6 md:px-8">
+          <h2 id="tiers-heading" className="sr-only">
+            Plans
+          </h2>
+
+          <RevealGroup className="grid gap-6 lg:grid-cols-3 lg:gap-8" delayChildren={0.08}>
+            {tiers.map((tier) => (
+              <RevealItem key={tier.name} className={tier.highlighted ? 'lg:-mt-2' : undefined}>
+                <article
+                  className={
+                    tier.highlighted
+                      ? 'flex h-full flex-col rounded-4xl border border-bright bg-paper p-8 shadow-float md:p-10'
+                      : 'flex h-full flex-col rounded-4xl border border-edge bg-paper p-8 md:p-10'
+                  }
+                >
+                  <div className="flex items-center justify-between gap-4">
+                    <h3 className="font-display text-h3 font-medium text-forest">{tier.name}</h3>
+                    {tier.highlighted ? <Pill tone="mint">Most popular</Pill> : null}
+                  </div>
+
+                  <p className="mt-5">
+                    <span className="font-display text-[2.75rem] font-medium leading-none tracking-[-0.02em] text-forest">
+                      {tier.price}
+                    </span>
+                    <span className="text-[1.125rem] text-moss">{tier.cadence}</span>
+                  </p>
+
+                  <p className="mt-5 text-body-base text-moss">{tier.description}</p>
+
+                  <ul className="mt-7 flex-1 space-y-3.5">
+                    {tier.features.map((feature) => (
+                      <li key={feature} className="flex items-start gap-3">
+                        <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-mint text-forest">
+                          <Check className="size-3" strokeWidth={3} aria-hidden />
+                        </span>
+                        <span className="text-[0.9375rem] text-moss">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  <div className="mt-9">
+                    <Button
+                      href="/signup"
+                      variant={tier.highlighted ? 'primary' : 'secondary'}
+                      size="lg"
+                      className="w-full"
+                    >
+                      {tier.cta}
+                    </Button>
+                  </div>
+                </article>
+              </RevealItem>
+            ))}
+          </RevealGroup>
+
+          {/* Required context, not fine print to be hidden. */}
+          <Reveal delay={0.16}>
+            <p className="mx-auto mt-12 max-w-2xl text-center text-[0.8125rem] leading-relaxed text-moss">
+              TenzoPay is a demonstration product operating against sandbox infrastructure. No
+              charges are made and no real funds are held. Pricing shown is illustrative.
+            </p>
+          </Reveal>
         </div>
-      </section>
-
-      <section className="mx-auto max-w-5xl px-5 py-16">
-        <div className="grid gap-6 lg:grid-cols-3">
-          {tiers.map((tier) => (
-            <div
-              key={tier.name}
-              className={
-                tier.highlighted
-                  ? 'card-surface relative border-primary/40 p-6 shadow-[var(--shadow-raised)]'
-                  : 'card-surface p-6'
-              }
-            >
-              {tier.highlighted ? (
-                <span className="absolute -top-2.5 left-6 rounded-full bg-primary px-2.5 py-0.5 text-[11px] font-semibold text-primary-foreground">
-                  Most popular
-                </span>
-              ) : null}
-
-              <h2 className="font-semibold text-foreground">{tier.name}</h2>
-              <p className="mt-3">
-                <span className="tnum text-3xl font-semibold tracking-tight text-foreground">
-                  {tier.price}
-                </span>
-                <span className="text-sm text-muted-foreground">{tier.cadence}</span>
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-                {tier.description}
-              </p>
-
-              <ul className="mt-6 space-y-2.5">
-                {tier.features.map((feature) => (
-                  <li key={feature} className="flex gap-2.5 text-sm text-foreground/80">
-                    <Check
-                      className="mt-0.5 size-4 shrink-0 text-positive"
-                      strokeWidth={2.5}
-                      aria-hidden
-                    />
-                    {feature}
-                  </li>
-                ))}
-              </ul>
-
-              <Button
-                asChild
-                className="mt-7 w-full"
-                variant={tier.highlighted ? 'default' : 'secondary'}
-              >
-                <Link href="/signup">{tier.cta}</Link>
-              </Button>
-            </div>
-          ))}
-        </div>
-
-        {/* Required context, not fine print to be hidden. */}
-        <p className="mx-auto mt-10 max-w-2xl text-center text-xs leading-relaxed text-muted-foreground">
-          TenzoPay is a demonstration product operating against sandbox
-          infrastructure. No charges are made and no real funds are held. Pricing
-          shown is illustrative.
-        </p>
       </section>
     </>
   );

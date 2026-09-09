@@ -5,11 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Suspense, useState } from 'react';
-import { toast } from 'sonner';
 import { loginSchema, type LoginInput } from '@tenzopay/shared';
 import { api, ApiError } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Alert, Field, Input } from '@/components/ui/primitives';
+import { Button } from '@/components/marketing/ui/button';
+import { Alert, Field, Input } from '@/components/marketing/ui/form';
 
 function LoginForm() {
   const router = useRouter();
@@ -40,20 +39,20 @@ function LoginForm() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+      <h1 className="font-display text-[2rem] font-medium leading-[1.1] tracking-[-0.02em] text-forest">
         Welcome back
       </h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">
+      <p className="mt-3 text-body-base text-moss">
         Sign in to manage your balance and cards.
       </p>
 
       {formError ? (
-        <Alert tone="critical" className="mt-5">
+        <Alert tone="critical" className="mt-6">
           {formError}
         </Alert>
       ) : null}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5" noValidate>
         <Field label="Email" htmlFor="email" error={errors.email?.message}>
           <Input
             id="email"
@@ -79,20 +78,23 @@ function LoginForm() {
         <div className="flex justify-end">
           <Link
             href="/forgot-password"
-            className="text-sm text-primary hover:underline"
+            className="rounded text-[0.875rem] text-moss underline-offset-4 hover:text-forest hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright"
           >
             Forgot password?
           </Link>
         </div>
 
-        <Button type="submit" className="w-full" loading={isSubmitting}>
+        <Button type="submit" size="lg" className="w-full" loading={isSubmitting}>
           Sign in
         </Button>
       </form>
 
-      <p className="mt-6 text-sm text-muted-foreground">
+      <p className="mt-8 text-[0.9375rem] text-moss">
         New to TenzoPay?{' '}
-        <Link href="/signup" className="font-medium text-primary hover:underline">
+        <Link
+          href="/signup"
+          className="rounded font-medium text-forest underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright"
+        >
           Create an account
         </Link>
       </p>

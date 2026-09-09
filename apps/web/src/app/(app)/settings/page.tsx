@@ -69,22 +69,22 @@ export default function SettingsPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-3xl space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-40" />
-        <Skeleton className="h-56 w-full rounded-2xl" />
+        <Skeleton className="h-56 w-full rounded-card" />
       </div>
     );
   }
 
   return (
-    <div className="mx-auto max-w-3xl space-y-6">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+    <div className="space-y-10">
+      <h1 className="text-title font-semibold text-content-primary">
         Settings
       </h1>
 
       <Panel>
         <PanelHeader title="Profile" />
-        <dl className="divide-y divide-border">
+        <dl className="divide-y divide-hairline">
           <Row label="Name" value={[me?.firstName, me?.lastName].filter(Boolean).join(' ') || '—'} />
           <Row label="Email" value={me?.email ?? '—'} />
           <Row
@@ -109,13 +109,13 @@ export default function SettingsPage() {
               <ShieldAlert className="size-5 text-warning" aria-hidden />
             )}
             <div>
-              <p className="text-sm font-medium text-foreground">
+              <p className="text-ui font-semibold text-foreground">
                 {me?.kycStatus === 'ACCEPTED'
                   ? 'Your identity is verified'
                   : 'Verification required'}
               </p>
               {me?.kycReasons.length ? (
-                <p className="mt-0.5 text-xs text-muted-foreground">
+                <p className="mt-0.5 text-caption text-muted-foreground">
                   {me.kycReasons.join(', ').replace(/_/g, ' ').toLowerCase()}
                 </p>
               ) : null}
@@ -150,7 +150,7 @@ export default function SettingsPage() {
         />
 
         {notifications?.length ? (
-          <ul className="divide-y divide-border">
+          <ul className="divide-y divide-hairline">
             {notifications.map((notification) => (
               <li
                 key={notification.id}
@@ -163,12 +163,12 @@ export default function SettingsPage() {
                   aria-hidden
                 />
                 <div className="min-w-0 flex-1">
-                  <p className="text-sm font-medium text-foreground">
+                  <p className="text-ui font-semibold text-foreground">
                     {notification.title}
                   </p>
-                  <p className="text-sm text-muted-foreground">{notification.body}</p>
+                  <p className="text-ui text-muted-foreground">{notification.body}</p>
                 </div>
-                <span className="shrink-0 text-xs text-muted-foreground">
+                <span className="shrink-0 text-caption text-muted-foreground">
                   {relativeTime(notification.createdAt)}
                 </span>
               </li>
@@ -185,7 +185,7 @@ export default function SettingsPage() {
           description="Signing out everywhere revokes every active session immediately."
         />
         <div className="flex flex-wrap items-center justify-between gap-3 p-5">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-ui text-muted-foreground">
             Sign out on all devices, including this one.
           </p>
           <Button
@@ -206,8 +206,8 @@ export default function SettingsPage() {
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 px-5 py-3.5">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-sm font-medium text-foreground">{value}</dd>
+      <dt className="text-ui text-muted-foreground">{label}</dt>
+      <dd className="text-ui font-semibold text-foreground">{value}</dd>
     </div>
   );
 }

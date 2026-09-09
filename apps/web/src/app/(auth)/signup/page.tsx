@@ -8,8 +8,8 @@ import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { registerSchema, type RegisterInput } from '@tenzopay/shared';
 import { api, ApiError } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Alert, Field, Input } from '@/components/ui/primitives';
+import { Button } from '@/components/marketing/ui/button';
+import { Alert, Field, Input } from '@/components/marketing/ui/form';
 import { cn } from '@/lib/utils';
 
 /** Live requirements list — feedback while typing beats a rejection on submit. */
@@ -50,21 +50,21 @@ export default function SignupPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+      <h1 className="font-display text-[2rem] font-medium leading-[1.1] tracking-[-0.02em] text-forest">
         Create your account
       </h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">
+      <p className="mt-3 text-body-base text-moss">
         One balance, as many cards as you need.
       </p>
 
       {formError ? (
-        <Alert tone="critical" className="mt-5">
+        <Alert tone="critical" className="mt-6">
           {formError}
         </Alert>
       ) : null}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
-        <div className="grid gap-4 sm:grid-cols-2">
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5" noValidate>
+        <div className="grid gap-5 sm:grid-cols-2">
           <Field label="First name" htmlFor="firstName" error={errors.firstName?.message}>
             <Input
               id="firstName"
@@ -104,42 +104,43 @@ export default function SignupPage() {
           />
         </Field>
 
-        <ul className="space-y-1.5" aria-label="Password requirements">
+        <ul className="grid gap-2 sm:grid-cols-2" aria-label="Password requirements">
           {rules.map((rule) => {
             const met = rule.test(password);
             return (
-              <li key={rule.label} className="flex items-center gap-2 text-xs">
+              <li key={rule.label} className="flex items-center gap-2 text-[0.8125rem]">
                 <span
                   className={cn(
-                    'flex size-4 items-center justify-center rounded-full transition-colors',
-                    met ? 'bg-positive text-white' : 'bg-border text-transparent',
+                    'flex size-4 items-center justify-center rounded-full transition-colors duration-200',
+                    met ? 'bg-bright text-forest' : 'bg-edge text-transparent',
                   )}
                   aria-hidden
                 >
                   <Check className="size-2.5" strokeWidth={3} />
                 </span>
-                <span className={met ? 'text-foreground/80' : 'text-muted-foreground'}>
-                  {rule.label}
-                </span>
+                <span className={met ? 'text-forest' : 'text-moss'}>{rule.label}</span>
                 <span className="sr-only">{met ? '(met)' : '(not met)'}</span>
               </li>
             );
           })}
         </ul>
 
-        <Button type="submit" className="w-full" loading={isSubmitting}>
+        <Button type="submit" size="lg" className="w-full" loading={isSubmitting}>
           Create account
         </Button>
 
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          By continuing you agree to our terms and acknowledge that TenzoPay is
-          a demonstration product operating in sandbox mode.
+        <p className="text-[0.8125rem] leading-relaxed text-moss">
+          By continuing you agree to our terms and acknowledge that TenzoPay is a demonstration
+          product operating in sandbox mode.
         </p>
       </form>
 
-      <p className="mt-6 text-sm text-muted-foreground">
+      <p className="mt-8 text-[0.9375rem] text-moss">
         Already have an account?{' '}
-        <Link href="/login" className="font-medium text-primary hover:underline">
+        <Link
+          href="/login"
+          className="rounded font-medium text-forest underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright"
+        >
           Sign in
         </Link>
       </p>

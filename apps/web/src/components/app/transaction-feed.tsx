@@ -59,7 +59,7 @@ export function TransactionFeed({
       <TransactionList rows={rows} />
 
       {hasNextPage ? (
-        <div className="border-t p-4 text-center">
+        <div className="p-4 text-center">
           <Button
             variant="secondary"
             size="sm"
@@ -70,7 +70,7 @@ export function TransactionFeed({
           </Button>
         </div>
       ) : rows.length ? (
-        <p className="border-t px-5 py-4 text-center text-xs text-muted-foreground">
+        <p className="px-5 py-6 text-center text-caption text-content-tertiary">
           {/* Confirms the list is complete, so an empty scroll is never
               mistaken for a failure to load. */}
           That&rsquo;s everything — {rows.length}{' '}

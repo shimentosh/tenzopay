@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { CartesianGrid, Line, LineChart, ReferenceDot, XAxis, YAxis } from 'recharts';
 import { api } from '@/lib/api';
 import { money } from '@/lib/utils';
 import { Skeleton } from '@/components/ui/primitives';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ChartFrame } from '@/components/ui/patterns';
 import {
   ChartContainer,
   ChartTooltip,
@@ -50,30 +51,29 @@ export function SpendingChart() {
     })) ?? [];
 
   const hasSpend = chartData.some((point) => point.value > 0);
+  const last = chartData[chartData.length - 1];
+  const first = chartData[0];
+  const dayLabel = (value?: string) =>
+    value
+      ? new Date(value).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })
+      : '';
 
   return (
-    <div>
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
-            Total spent
-          </p>
-          {isLoading ? (
-            <Skeleton className="mt-2 h-8 w-32" />
-          ) : (
-            <p className="tnum mt-1 text-2xl font-semibold text-foreground">
-              {money(data?.total ?? '0')}
-              <span className="ml-1.5 text-sm font-medium text-muted-foreground">
-                USDT
-              </span>
-            </p>
-          )}
-        </div>
-
-        <Tabs
-          value={String(days)}
-          onValueChange={(value) => setDays(Number(value) as 1 | 7 | 30)}
-        >
+    <ChartFrame
+      title={
+        isLoading ? (
+          <Skeleton className="h-6 w-28" />
+        ) : (
+          <span className="tnum text-value font-semibold text-content-primary">
+            {money(data?.total ?? '0')}
+            <span className="ml-1.5 font-normal text-content-tertiary">USDT spent</span>
+          </span>
+        )
+      }
+      rangeStart={dayLabel(first?.date)}
+      rangeEnd="Today"
+      action={
+        <Tabs value={String(days)} onValueChange={(value) => setDays(Number(value) as 1 | 7 | 30)}>
           <TabsList>
             {ranges.map((range) => (
               <TabsTrigger key={range.days} value={String(range.days)}>
@@ -82,22 +82,21 @@ export function SpendingChart() {
             ))}
           </TabsList>
         </Tabs>
-      </div>
-
-      <div className="mt-5">
+      }
+    >
+      <div>
         {isLoading ? (
           <Skeleton className="h-44 w-full" />
         ) : hasSpend ? (
           <ChartContainer config={chartConfig} className="h-44 w-full">
-            <AreaChart data={chartData} margin={{ top: 4, right: 4, left: -18 }}>
-              <defs>
-                <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.26} />
-                  <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+            <LineChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+              {/* At most two dashed horizontal references, in hairline. */}
+              <CartesianGrid
+                vertical={false}
+                horizontal
+                strokeDasharray="4 4"
+                stroke="var(--hairline)"
+              />
 
               <XAxis
                 dataKey="date"
@@ -113,9 +112,10 @@ export function SpendingChart() {
                 }
               />
               <YAxis
+                orientation="right"
                 tickLine={false}
                 axisLine={false}
-                width={54}
+                width={48}
                 tickFormatter={(value: number) =>
                   value >= 1000 ? `${(value / 1000).toFixed(1)}k` : String(value)
                 }
@@ -141,21 +141,34 @@ export function SpendingChart() {
                 }
               />
 
-              <Area
+              <Line
                 type="monotone"
                 dataKey="value"
                 stroke="var(--chart-1)"
                 strokeWidth={2}
-                fill="url(#spendFill)"
+                dot={false}
+                activeDot={{ r: 4 }}
               />
-            </AreaChart>
+
+              {/* One filled dot with a soft halo marks the latest point. */}
+              {last ? (
+                <ReferenceDot
+                  x={last.date}
+                  y={last.value}
+                  r={4}
+                  fill="var(--chart-1)"
+                  stroke="var(--surface-page)"
+                  strokeWidth={3}
+                />
+              ) : null}
+            </LineChart>
           </ChartContainer>
         ) : (
-          <div className="flex h-44 items-center justify-center text-sm text-muted-foreground">
+          <div className="flex h-44 items-center justify-center text-ui text-content-tertiary">
             No spending in this period
           </div>
         )}
       </div>
-    </div>
+    </ChartFrame>
   );
 }

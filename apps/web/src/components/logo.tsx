@@ -25,7 +25,7 @@ export function Logo({
           width="32"
           height="32"
           rx="9"
-          fill={inverted ? '#ffffff' : 'var(--color-brand-600)'}
+          fill={inverted ? 'var(--surface-page)' : 'var(--content-primary)'}
         />
         <rect
           x="7"
@@ -33,7 +33,7 @@ export function Logo({
           width="18"
           height="6"
           rx="3"
-          fill={inverted ? 'var(--color-brand-600)' : '#ffffff'}
+          fill={inverted ? 'var(--content-primary)' : 'var(--surface-page)'}
         />
         <rect
           x="7"
@@ -41,7 +41,7 @@ export function Logo({
           width="11"
           height="5"
           rx="2.5"
-          fill={inverted ? 'var(--color-brand-600)' : '#ffffff'}
+          fill={inverted ? 'var(--content-primary)' : 'var(--surface-page)'}
           fillOpacity="0.6"
         />
       </svg>

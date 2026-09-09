@@ -18,14 +18,6 @@ import {
   Skeleton,
   StatusBadge,
 } from '@/components/ui/primitives';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { money, formatDateTime, truncateHash } from '@/lib/utils';
 import type { DepositSummary, Paginated } from '@tenzopay/shared';
 
@@ -71,7 +63,9 @@ export default function DepositPage() {
     QRCode.toDataURL(info.address, {
       width: 320,
       margin: 1,
-      color: { dark: '#111827', light: '#ffffff' },
+      // Literal values: the QR is rasterised to a data URL and cannot read CSS
+      // custom properties. These mirror --content-primary / --surface-page.
+      color: { dark: '#0e0f0c', light: '#ffffff' },
     })
       .then(setQr)
       .catch(() => setQr(null));
@@ -100,7 +94,7 @@ export default function DepositPage() {
 
   if (error instanceof ApiError && error.code === 'KYC_REQUIRED') {
     return (
-      <Panel className="mx-auto max-w-lg">
+      <Panel className="max-w-lg">
         <EmptyState
           icon={<Wallet className="size-5" />}
           title="Verification required"
@@ -116,12 +110,12 @@ export default function DepositPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-title font-semibold text-content-primary">
           Deposit USDT
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-ui text-muted-foreground">
           Funds are credited after the required network confirmations.
         </p>
       </div>
@@ -158,19 +152,19 @@ export default function DepositPage() {
                     <img
                       src={qr}
                       alt={`QR code for deposit address ${info.address}`}
-                      className="size-48 rounded-xl border bg-card p-2"
+                      className="size-48 rounded-card border bg-card p-2"
                     />
                   ) : (
-                    <Skeleton className="size-48 rounded-xl" />
+                    <Skeleton className="size-48 rounded-card" />
                   )}
                 </div>
 
                 <div>
-                  <p className="mb-1.5 text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  <p className="mb-2 text-caption text-content-tertiary">
                     Address
                   </p>
                   <div className="flex items-stretch gap-2">
-                    <code className="min-w-0 flex-1 break-all rounded-lg border bg-muted px-3 py-2.5 text-xs text-foreground">
+                    <code className="min-w-0 flex-1 break-all rounded-card border bg-muted px-3 py-2.5 text-caption text-foreground">
                       {info.address}
                     </code>
                     <Button
@@ -188,28 +182,28 @@ export default function DepositPage() {
                   </div>
                 </div>
 
-                <dl className="grid grid-cols-2 gap-4 rounded-xl border p-4 text-sm">
+                <dl className="grid grid-cols-2 gap-4 rounded-card border p-4 text-ui">
                   <div>
-                    <dt className="text-xs text-muted-foreground">Network</dt>
-                    <dd className="mt-0.5 font-medium text-foreground">
+                    <dt className="text-caption text-muted-foreground">Network</dt>
+                    <dd className="mt-0.5 font-semibold text-foreground">
                       {info.networkLabel}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-muted-foreground">Minimum deposit</dt>
-                    <dd className="tnum mt-0.5 font-medium text-foreground">
+                    <dt className="text-caption text-muted-foreground">Minimum deposit</dt>
+                    <dd className="tnum mt-0.5 font-semibold text-foreground">
                       {money(info.minimumAmount)} {info.currency}
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-muted-foreground">Confirmations</dt>
-                    <dd className="tnum mt-0.5 font-medium text-foreground">
+                    <dt className="text-caption text-muted-foreground">Confirmations</dt>
+                    <dd className="tnum mt-0.5 font-semibold text-foreground">
                       {info.requiredConfirmations} blocks
                     </dd>
                   </div>
                   <div>
-                    <dt className="text-xs text-muted-foreground">Token</dt>
-                    <dd className="mt-0.5 font-medium text-foreground">
+                    <dt className="text-caption text-muted-foreground">Token</dt>
+                    <dd className="mt-0.5 font-semibold text-foreground">
                       USDT (ERC-20)
                     </dd>
                   </div>
@@ -221,7 +215,7 @@ export default function DepositPage() {
                   {info.warnings.map((warning) => (
                     <li
                       key={warning}
-                      className="flex gap-2 rounded-lg bg-warning-soft px-3 py-2.5 text-xs leading-relaxed text-foreground/80"
+                      className="flex gap-2 rounded-card bg-surface-raised px-3 py-2.5 text-caption leading-relaxed text-content-secondary"
                     >
                       <AlertTriangle
                         className="mt-px size-3.5 shrink-0 text-warning"
@@ -265,7 +259,7 @@ export default function DepositPage() {
                 Simulate deposit
               </Button>
 
-              <p className="text-xs leading-relaxed text-muted-foreground">
+              <p className="text-caption leading-relaxed text-muted-foreground">
                 The deposit moves through detection and confirmation exactly as a
                 real one would, then posts a ledger credit. These are not real
                 funds.
@@ -279,59 +273,55 @@ export default function DepositPage() {
         <PanelHeader title="Deposit history" />
 
         {deposits?.data.length ? (
-          <div className="overflow-x-auto">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Amount</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Confirmations</TableHead>
-                  <TableHead>Transaction</TableHead>
-                  <TableHead>Date</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {deposits.data.map((deposit) => (
-                  <TableRow key={deposit.id}>
-                    <TableCell className="tnum font-medium text-foreground">
-                      {money(deposit.amount)} {deposit.currency}
+          <ul className="px-2 pb-2">
+            {deposits.data.map((deposit) => (
+              <li key={deposit.id}>
+                {/* No table, no header row, no zebra — one row that reads at
+                    every width, the same shape as the transaction feed. */}
+                <div className="flex items-center gap-4 rounded-card px-3 py-4 transition-colors duration-150 ease hover:bg-surface-raised-hover">
+                  <span
+                    className="flex size-12 shrink-0 items-center justify-center rounded-full bg-surface-raised-hover text-content-primary"
+                    aria-hidden
+                  >
+                    <Wallet className="size-5" />
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <p className="flex items-center gap-2 text-ui font-semibold text-content-primary">
+                      <span className="tnum">
+                        {money(deposit.amount)} {deposit.currency}
+                      </span>
                       {deposit.isDemo ? (
-                        <Badge
-                          tone="neutral"
-                          className="ml-2 px-1.5 py-0 text-[10px] uppercase"
-                        >
+                        <Badge tone="neutral" className="px-1.5 py-0">
                           Demo
                         </Badge>
                       ) : null}
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={deposit.status} />
-                    </TableCell>
-                    <TableCell className="tnum text-muted-foreground">
-                      {deposit.status === 'CONFIRMED'
-                        ? 'Complete'
-                        : `${deposit.confirmations} / ${deposit.requiredConfirmations}`}
-                    </TableCell>
-                    <TableCell>
+                    </p>
+                    <p className="mt-0.5 flex flex-wrap items-center gap-x-2 text-ui text-content-tertiary">
+                      <span>{formatDateTime(deposit.createdAt)}</span>
                       {deposit.txHash ? (
-                        <span className="inline-flex items-center gap-1 font-mono text-xs text-muted-foreground">
-                          {truncateHash(deposit.txHash)}
+                        <span className="inline-flex items-center gap-1 font-mono text-caption">
+                          · {truncateHash(deposit.txHash)}
                           {!deposit.isDemo ? (
                             <ExternalLink className="size-3" aria-hidden />
                           ) : null}
                         </span>
-                      ) : (
-                        <span className="text-muted-foreground/60">—</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {formatDateTime(deposit.createdAt)}
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                      ) : null}
+                    </p>
+                  </div>
+
+                  <div className="shrink-0 text-right">
+                    <StatusBadge status={deposit.status} />
+                    <p className="tnum mt-1 text-caption text-content-tertiary">
+                      {deposit.status === 'CONFIRMED'
+                        ? 'Complete'
+                        : `${deposit.confirmations} / ${deposit.requiredConfirmations}`}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
         ) : (
           <EmptyState
             icon={<Wallet className="size-5" />}

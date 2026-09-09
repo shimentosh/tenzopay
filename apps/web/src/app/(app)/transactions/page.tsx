@@ -3,7 +3,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { api } from '@/lib/api';
-import { Panel } from '@/components/ui/primitives';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -48,18 +47,15 @@ export default function TransactionsPage() {
 
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-          Transactions
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <h1 className="text-title font-semibold text-content-primary">Transactions</h1>
+        <p className="mt-2 text-ui text-content-tertiary">
           Deposits, card payments, refunds and fees in one feed.
         </p>
       </div>
 
-      <Panel>
-        <div className="space-y-4 border-b p-5">
+      <div className="space-y-4 rounded-card bg-surface-raised p-5">
           <Tabs value={type} onValueChange={(v) => setType(v as FilterValue)}>
             <TabsList>
               {filters.map((filter) => (
@@ -71,8 +67,8 @@ export default function TransactionsPage() {
           </Tabs>
 
           <div className="flex flex-wrap items-end gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="card-filter" className="text-xs text-muted-foreground">
+            <div className="space-y-2">
+              <Label htmlFor="card-filter" className="text-caption text-content-tertiary">
                 Card
               </Label>
               <Select value={cardId} onValueChange={setCardId}>
@@ -90,8 +86,8 @@ export default function TransactionsPage() {
               </Select>
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="from" className="text-xs text-muted-foreground">
+            <div className="space-y-2">
+              <Label htmlFor="from" className="text-caption text-content-tertiary">
                 From
               </Label>
               <Input
@@ -103,8 +99,8 @@ export default function TransactionsPage() {
               />
             </div>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="to" className="text-xs text-muted-foreground">
+            <div className="space-y-2">
+              <Label htmlFor="to" className="text-caption text-content-tertiary">
                 To
               </Label>
               <Input
@@ -116,10 +112,9 @@ export default function TransactionsPage() {
               />
             </div>
           </div>
-        </div>
+      </div>
 
-        <TransactionFeed query={query} />
-      </Panel>
+      <TransactionFeed query={query} />
     </div>
   );
 }

@@ -1,5 +1,7 @@
-import Link from 'next/link';
-import { Button } from '@/components/ui/button';
+import { Accordion } from '@/components/marketing/ui/accordion';
+import { Button } from '@/components/marketing/ui/button';
+import { PageHero } from '@/components/marketing/ui/page-hero';
+import { Reveal } from '@/components/marketing/ui/reveal';
 
 export const metadata = {
   title: 'FAQ',
@@ -56,31 +58,34 @@ const faqs = [
 export default function FaqPage() {
   return (
     <>
-      <section className="border-b border-border bg-card">
-        <div className="mx-auto max-w-3xl px-5 py-16 lg:py-20">
-          <h1 className="text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
-            Frequently asked questions
-          </h1>
-        </div>
-      </section>
+      <PageHero
+        eyebrow="FAQ"
+        title="Frequently asked questions"
+        lead="Balances, cards and deposits — including the questions where the answer is no."
+      />
 
-      <section className="mx-auto max-w-3xl px-5 py-16">
-        <dl className="divide-y divide-border">
-          {faqs.map((faq) => (
-            <div key={faq.q} className="py-6 first:pt-0">
-              <dt className="font-semibold text-foreground">{faq.q}</dt>
-              <dd className="mt-2 leading-relaxed text-muted-foreground">{faq.a}</dd>
-            </div>
-          ))}
-        </dl>
+      <section aria-labelledby="faq-list-heading" className="bg-paper py-24 md:py-32">
+        <div className="mx-auto w-full max-w-container px-6 md:px-8">
+          <div className="mx-auto max-w-3xl">
+            <h2 id="faq-list-heading" className="sr-only">
+              Questions and answers
+            </h2>
 
-        <div className="mt-10 flex flex-wrap justify-center gap-3">
-          <Button asChild>
-            <Link href="/signup">Get started</Link>
-          </Button>
-          <Button asChild variant="secondary">
-            <Link href="/security">Read about security</Link>
-          </Button>
+            <Reveal>
+              <Accordion items={faqs.map((faq) => ({ question: faq.q, answer: faq.a }))} />
+            </Reveal>
+
+            <Reveal delay={0.1}>
+              <div className="mt-12 flex flex-wrap justify-center gap-3">
+                <Button href="/signup" size="lg">
+                  Get your card
+                </Button>
+                <Button href="/security" variant="secondary" size="lg">
+                  Read about security
+                </Button>
+              </div>
+            </Reveal>
+          </div>
         </div>
       </section>
     </>

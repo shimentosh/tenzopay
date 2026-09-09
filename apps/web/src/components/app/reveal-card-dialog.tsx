@@ -67,7 +67,7 @@ export function RevealCardDialog({
         </DialogHeader>
 
         {mutation.isPending ? (
-          <Skeleton className="h-48 w-full rounded-xl" />
+          <Skeleton className="h-48 w-full rounded-card" />
         ) : mutation.isError ? (
           <Alert tone="critical">
             {mutation.error instanceof ApiError
@@ -84,7 +84,7 @@ export function RevealCardDialog({
           <iframe
             src={mutation.data.embedUrl}
             title="Card details"
-            className="h-48 w-full rounded-xl border"
+            className="h-48 w-full rounded-card border"
             // The issuer's frame needs scripts, nothing more.
             sandbox="allow-scripts allow-same-origin"
             referrerPolicy="no-referrer"

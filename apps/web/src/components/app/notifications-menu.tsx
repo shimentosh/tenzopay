@@ -90,16 +90,16 @@ export function NotificationsMenu() {
         >
           <Bell aria-hidden />
           {unread > 0 ? (
-            <span className="absolute right-1.5 top-1.5 size-2 rounded-full bg-destructive ring-2 ring-card" />
+            <span className="absolute right-2.5 top-2.5 size-2 rounded-full bg-negative ring-2 ring-surface-page" />
           ) : null}
         </Button>
       </DropdownMenuTrigger>
 
       <DropdownMenuContent align="end" className="w-80 p-0">
         <div className="flex items-center justify-between px-3 py-2.5">
-          <p className="text-sm font-semibold">Notifications</p>
+          <p className="text-ui font-semibold">Notifications</p>
           {unread > 0 ? (
-            <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-accent-foreground">
+            <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-semibold text-accent-foreground">
               {unread} new
             </span>
           ) : null}
@@ -124,10 +124,10 @@ export function NotificationsMenu() {
                       <Icon className="size-3.5" aria-hidden />
                     </span>
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm font-medium leading-tight">
+                      <p className="text-ui font-semibold leading-tight">
                         {notification.title}
                       </p>
-                      <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+                      <p className="mt-0.5 text-caption leading-snug text-muted-foreground">
                         {notification.body}
                       </p>
                       <p className="mt-1 text-[11px] text-muted-foreground/70">
@@ -147,7 +147,7 @@ export function NotificationsMenu() {
           ) : (
             <div className="flex flex-col items-center px-4 py-10 text-center">
               <BellOff className="size-5 text-muted-foreground/60" aria-hidden />
-              <p className="mt-2 text-sm text-muted-foreground">
+              <p className="mt-2 text-ui text-muted-foreground">
                 No notifications yet
               </p>
             </div>
@@ -158,7 +158,7 @@ export function NotificationsMenu() {
 
         <Link
           href="/settings#notifications"
-          className="block px-3 py-2.5 text-center text-xs font-medium text-primary hover:underline"
+          className="block px-3 py-2.5 text-center text-caption font-semibold text-primary hover:underline"
         >
           View all in settings
         </Link>

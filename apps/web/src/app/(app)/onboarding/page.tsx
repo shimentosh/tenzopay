@@ -49,7 +49,7 @@ export default function OnboardingPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-2xl space-y-4">
+      <div className="space-y-4">
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-96 w-full" />
       </div>
@@ -58,13 +58,13 @@ export default function OnboardingPage() {
 
   if (status?.status === 'ACCEPTED') {
     return (
-      <div className="mx-auto max-w-2xl">
+      <div>
         <Panel className="p-8 text-center">
           <BadgeCheck className="mx-auto size-8 text-positive" aria-hidden />
-          <h1 className="mt-4 text-xl font-semibold text-foreground">
+          <h1 className="mt-4 text-subtitle font-semibold text-foreground">
             You are verified
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-ui text-muted-foreground">
             You can now deposit funds and issue cards.
           </p>
           <Button className="mt-6" onClick={() => router.push('/dashboard')}>
@@ -77,18 +77,18 @@ export default function OnboardingPage() {
 
   if (status?.status === 'PENDING_REVIEW' || status?.status === 'PENDING_DOCUMENT') {
     return (
-      <div className="mx-auto max-w-2xl">
+      <div>
         <Panel className="p-8 text-center">
           <ShieldCheck className="mx-auto size-8 text-warning" aria-hidden />
-          <h1 className="mt-4 text-xl font-semibold text-foreground">
+          <h1 className="mt-4 text-subtitle font-semibold text-foreground">
             Verification in review
           </h1>
-          <p className="mt-1.5 text-sm text-muted-foreground">
+          <p className="mt-1.5 text-ui text-muted-foreground">
             We are reviewing your details. This usually takes a short while, and
             we will update you as soon as there is a decision.
           </p>
           {status.reasons.length ? (
-            <ul className="mt-4 space-y-1 text-sm text-muted-foreground">
+            <ul className="mt-4 space-y-1 text-ui text-muted-foreground">
               {status.reasons.map((reason) => (
                 <li key={reason}>{reason.replace(/_/g, ' ').toLowerCase()}</li>
               ))}
@@ -100,11 +100,11 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+    <div>
+      <h1 className="text-title font-semibold text-content-primary">
         Verify your identity
       </h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">
+      <p className="mt-1.5 text-ui text-muted-foreground">
         Card issuing is regulated, so we need to confirm who you are before you
         can deposit or spend.
       </p>

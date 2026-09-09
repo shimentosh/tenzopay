@@ -37,7 +37,7 @@ export function VirtualCard({
     <div
       className={cn(
         'relative isolate flex flex-col justify-between overflow-hidden rounded-2xl p-5 text-white',
-        'shadow-[var(--shadow-card)] transition-transform duration-300',
+        'transition-colors duration-150 ease',
         compact ? 'aspect-[1.75/1]' : 'aspect-[1.586/1]',
         frozen ? 'card-face-frozen' : closed ? 'card-face-closed' : 'card-face',
         className,
@@ -55,7 +55,7 @@ export function VirtualCard({
 
       <div className="relative flex items-start justify-between">
         <div className="min-w-0">
-          <p className="truncate text-[13px] font-medium text-white/70">
+          <p className="truncate text-[13px] font-semibold text-white/70">
             {card.name}
           </p>
           {limit ? (
@@ -66,12 +66,12 @@ export function VirtualCard({
         </div>
 
         {frozen ? (
-          <span className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider backdrop-blur-sm">
+          <span className="flex items-center gap-1 rounded-full bg-white/15 px-2 py-1 text-caption font-semibold">
             <Snowflake className="size-3" aria-hidden />
             Frozen
           </span>
         ) : closed ? (
-          <span className="rounded-full bg-white/15 px-2 py-1 text-[10px] font-semibold uppercase tracking-wider">
+          <span className="rounded-full bg-white/15 px-2 py-1 text-caption font-semibold">
             Closed
           </span>
         ) : (
@@ -88,7 +88,7 @@ export function VirtualCard({
 
         <div className="mt-3 flex items-end justify-between">
           <div>
-            <p className="text-[9px] uppercase tracking-widest text-white/40">
+            <p className="text-caption text-white/45">
               Expires
             </p>
             <p className="tnum text-xs text-white/80">

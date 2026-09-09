@@ -6,7 +6,8 @@ import { CreditCard, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
-import { EmptyState, Panel, Skeleton, StatusBadge } from '@/components/ui/primitives';
+import { EmptyState, Skeleton, StatusBadge } from '@/components/ui/primitives';
+import { SectionHeader } from '@/components/ui/patterns';
 import { VirtualCard } from '@/components/virtual-card';
 import { CreateCardDialog } from '@/components/app/create-card-dialog';
 import { usd } from '@/lib/utils';
@@ -24,58 +25,57 @@ export default function CardsPage() {
   const closed = cards?.filter((c) => c.status === 'CLOSED') ?? [];
 
   return (
-    <div className="mx-auto max-w-6xl space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
+    <div className="space-y-10">
+      <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-            Cards
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <h1 className="text-title font-semibold text-content-primary">Cards</h1>
+          <p className="mt-2 text-ui text-content-tertiary">
             Every card spends from your single available balance.
           </p>
         </div>
+        {/* The one accent-filled action on this screen. */}
         <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="size-4" aria-hidden />
+          <Plus aria-hidden />
           Create card
         </Button>
       </div>
 
       {isLoading ? (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {[0, 1, 2].map((i) => (
+        <div className="grid gap-6 sm:grid-cols-2">
+          {[0, 1].map((i) => (
             <div key={i} className="space-y-3">
-              <Skeleton className="aspect-[1.586/1] w-full rounded-2xl" />
+              <Skeleton className="aspect-[1.586/1] w-full" />
               <Skeleton className="h-4 w-2/3" />
             </div>
           ))}
         </div>
       ) : active.length ? (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-2">
           {active.map((card) => (
             <CardTile key={card.id} card={card} />
           ))}
         </div>
       ) : (
-        <Panel>
+        <div className="rounded-card bg-surface-raised">
           <EmptyState
             icon={<CreditCard className="size-5" />}
             title="No cards yet"
             description="Create your first virtual card and give it a daily or monthly limit."
             action={
-              <Button size="sm" onClick={() => setCreateOpen(true)}>
+              <Button variant="secondary" onClick={() => setCreateOpen(true)}>
                 Create card
               </Button>
             }
           />
-        </Panel>
+        </div>
       )}
 
       {closed.length ? (
-        <section>
-          <h2 className="mb-4 text-sm font-semibold text-muted-foreground">
-            Closed cards
-          </h2>
-          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+        <section aria-labelledby="closed-cards" className="space-y-4">
+          <div id="closed-cards">
+            <SectionHeader title="Closed cards" />
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2">
             {closed.map((card) => (
               <CardTile key={card.id} card={card} />
             ))}
@@ -92,15 +92,13 @@ function CardTile({ card }: { card: CardSummary }) {
   return (
     <Link
       href={`/cards/${card.id}`}
-      className="group block rounded-2xl transition-transform duration-300 hover:-translate-y-1"
+      className="block rounded-card outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
     >
       <VirtualCard card={card} />
-      <div className="mt-3 flex items-center justify-between gap-2 px-0.5">
+      <div className="mt-3 flex items-center justify-between gap-3 px-0.5">
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">
-            {card.name}
-          </p>
-          <p className="tnum text-xs text-muted-foreground">
+          <p className="truncate text-ui font-semibold text-content-primary">{card.name}</p>
+          <p className="tnum mt-0.5 text-ui text-content-tertiary">
             {card.dailyLimit
               ? `${usd(card.dailyLimit)} / day`
               : card.monthlyLimit

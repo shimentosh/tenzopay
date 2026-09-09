@@ -107,8 +107,8 @@ export function CreateCardDialog({
             <div className="mx-auto w-full max-w-xs">
               <VirtualCard card={created} />
             </div>
-            <p className="text-center text-sm text-muted-foreground">
-              <span className="font-medium text-foreground">{created.name}</span>{' '}
+            <p className="text-center text-ui text-muted-foreground">
+              <span className="font-semibold text-foreground">{created.name}</span>{' '}
               is active and ready to use.
             </p>
             <DialogFooter>
@@ -210,7 +210,7 @@ export function CreateCardDialog({
             ) : null}
 
             {step === 2 ? (
-              <dl className="divide-y rounded-xl border">
+              <dl className="divide-y divide-hairline rounded-card bg-surface-raised px-4">
                 <ReviewRow label="Card name" value={values.name} />
                 <ReviewRow
                   label="Per transaction"
@@ -288,7 +288,7 @@ function Stepper({ current }: { current: number }) {
             </span>
             <span
               className={cn(
-                'text-xs font-medium',
+                'text-caption font-semibold',
                 active ? 'text-foreground' : 'text-muted-foreground',
               )}
             >
@@ -307,8 +307,8 @@ function Stepper({ current }: { current: number }) {
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between px-4 py-3">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-sm font-medium text-foreground">{value || '—'}</dd>
+      <dt className="text-ui text-muted-foreground">{label}</dt>
+      <dd className="text-ui font-semibold text-foreground">{value || '—'}</dd>
     </div>
   );
 }

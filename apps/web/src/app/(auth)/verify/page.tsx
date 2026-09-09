@@ -1,12 +1,11 @@
 'use client';
 
-import Link from 'next/link';
 import { Suspense, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { BadgeCheck, Loader2, XCircle } from 'lucide-react';
 import { api, ApiError } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Alert } from '@/components/ui/primitives';
+import { Button } from '@/components/marketing/ui/button';
+import { Alert } from '@/components/marketing/ui/form';
 
 type State = 'verifying' | 'done' | 'failed' | 'missing';
 
@@ -39,11 +38,13 @@ function VerifyEmail() {
   if (state === 'verifying') {
     return (
       <div className="text-center">
-        <Loader2 className="mx-auto size-7 animate-spin text-primary" aria-hidden />
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
+        <span className="inline-flex size-12 items-center justify-center rounded-full bg-mint text-forest">
+          <Loader2 className="size-5 animate-spin" aria-hidden />
+        </span>
+        <h1 className="mt-6 font-display text-[2rem] font-medium leading-[1.1] tracking-[-0.02em] text-forest">
           Verifying your email
         </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">One moment…</p>
+        <p className="mt-3 text-body-base text-moss">One moment…</p>
       </div>
     );
   }
@@ -51,40 +52,47 @@ function VerifyEmail() {
   if (state === 'done') {
     return (
       <div className="text-center">
-        <BadgeCheck className="mx-auto size-8 text-positive" aria-hidden />
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
+        <span className="inline-flex size-12 items-center justify-center rounded-full bg-bright text-forest">
+          <BadgeCheck className="size-6" aria-hidden />
+        </span>
+        <h1 className="mt-6 font-display text-[2rem] font-medium leading-[1.1] tracking-[-0.02em] text-forest">
           Email verified
         </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
+        <p className="mt-3 text-body-base text-moss">
           Your account is confirmed. You can sign in now.
         </p>
-        <Button asChild className="mt-6 w-full">
-          <Link href="/login">Continue to sign in</Link>
-        </Button>
+        <div className="mt-8">
+          <Button href="/login" size="lg" className="w-full">
+            Continue to sign in
+          </Button>
+        </div>
       </div>
     );
   }
 
   return (
     <div className="text-center">
-      <XCircle className="mx-auto size-8 text-destructive" aria-hidden />
-      <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
+      <span className="inline-flex size-12 items-center justify-center rounded-full bg-rust/10 text-rust">
+        <XCircle className="size-6" aria-hidden />
+      </span>
+      <h1 className="mt-6 font-display text-[2rem] font-medium leading-[1.1] tracking-[-0.02em] text-forest">
         {state === 'missing' ? 'Link not valid' : 'Verification failed'}
       </h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">
+      <p className="mt-3 text-body-base text-moss">
         {state === 'missing'
           ? 'This verification link is missing or malformed.'
           : (message ?? 'This link is invalid or has already been used.')}
       </p>
 
-      <Alert tone="brand" className="mt-5 text-left">
-        Verification links can only be used once. If you have already verified,
-        simply sign in.
+      <Alert tone="brand" className="mt-6 text-left">
+        Verification links can only be used once. If you have already verified, simply sign in.
       </Alert>
 
-      <Button asChild variant="secondary" className="mt-5 w-full">
-        <Link href="/login">Back to sign in</Link>
-      </Button>
+      <div className="mt-6">
+        <Button href="/login" variant="secondary" size="lg" className="w-full">
+          Back to sign in
+        </Button>
+      </div>
     </div>
   );
 }

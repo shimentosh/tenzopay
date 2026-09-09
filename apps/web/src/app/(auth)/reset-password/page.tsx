@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
@@ -8,8 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { toast } from 'sonner';
 import { resetPasswordSchema } from '@tenzopay/shared';
 import { api, ApiError } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Alert, Field, Input } from '@/components/ui/primitives';
+import { Button } from '@/components/marketing/ui/button';
+import { Alert, Field, Input } from '@/components/marketing/ui/form';
 
 type FormValues = { token: string; password: string };
 
@@ -46,35 +45,37 @@ function ResetForm() {
   if (!token) {
     return (
       <>
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+        <h1 className="font-display text-[2rem] font-medium leading-[1.1] tracking-[-0.02em] text-forest">
           Link not valid
         </h1>
-        <p className="mt-1.5 text-sm text-muted-foreground">
+        <p className="mt-3 text-body-base text-moss">
           This reset link is missing or malformed. Request a new one.
         </p>
-        <Button asChild className="mt-6 w-full">
-          <Link href="/forgot-password">Request a new link</Link>
-        </Button>
+        <div className="mt-8">
+          <Button href="/forgot-password" size="lg" className="w-full">
+            Request a new link
+          </Button>
+        </div>
       </>
     );
   }
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+      <h1 className="font-display text-[2rem] font-medium leading-[1.1] tracking-[-0.02em] text-forest">
         Choose a new password
       </h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">
+      <p className="mt-3 text-body-base text-moss">
         Signing in again will be required on all your devices.
       </p>
 
       {formError ? (
-        <Alert tone="critical" className="mt-5">
+        <Alert tone="critical" className="mt-6">
           {formError}
         </Alert>
       ) : null}
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5" noValidate>
         <input type="hidden" {...register('token')} />
 
         <Field
@@ -92,7 +93,7 @@ function ResetForm() {
           />
         </Field>
 
-        <Button type="submit" className="w-full" loading={isSubmitting}>
+        <Button type="submit" size="lg" className="w-full" loading={isSubmitting}>
           Update password
         </Button>
       </form>

@@ -80,11 +80,11 @@ export default function CardDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="mx-auto max-w-5xl space-y-6">
+      <div className="space-y-8">
         <Skeleton className="h-5 w-32" />
-        <div className="grid gap-6 lg:grid-cols-[380px_1fr]">
-          <Skeleton className="aspect-[1.586/1] rounded-2xl" />
-          <Skeleton className="h-64 rounded-2xl" />
+        <div className="grid gap-6 lg:grid-cols-[300px_1fr]">
+          <Skeleton className="aspect-[1.586/1]" />
+          <Skeleton className="h-64" />
         </div>
       </div>
     );
@@ -92,7 +92,7 @@ export default function CardDetailPage() {
 
   if (!card) {
     return (
-      <Panel className="mx-auto max-w-lg">
+      <Panel className="max-w-lg">
         <EmptyState
           title="Card not found"
           description="This card does not exist or is not yours."
@@ -110,16 +110,16 @@ export default function CardDetailPage() {
   const frozen = card.status === 'FROZEN';
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="space-y-8">
       <Link
         href="/cards"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground"
+        className="inline-flex items-center gap-1.5 rounded text-ui text-content-secondary outline-none transition-colors duration-150 ease hover:text-content-primary focus-visible:ring-2 focus-visible:ring-ring"
       >
         <ArrowLeft className="size-4" aria-hidden />
         All cards
       </Link>
 
-      <div className="grid gap-6 lg:grid-cols-[380px_1fr] lg:items-start">
+      <div className="grid gap-6 lg:grid-cols-[300px_1fr] lg:items-start">
         {/* ------------------------------------------------- Card column */}
         <div className="space-y-4">
           <VirtualCard card={card} />
@@ -160,7 +160,7 @@ export default function CardDetailPage() {
             ) : null}
           </div>
 
-          <Panel className="divide-y divide-border">
+          <Panel className="divide-y divide-hairline">
             <Row label="Status" value={<StatusBadge status={card.status} />} />
             <Row label="Spent today" value={usd(card.spentToday)} />
             <Row label="Spent this month" value={usd(card.spentThisMonth)} />
@@ -204,7 +204,7 @@ export default function CardDetailPage() {
               title="Controls"
               description="Only the controls this card actually supports are shown."
             />
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-hairline">
               {/*
                 Deliberately honest: a virtual card cannot be tapped or used at
                 an ATM, so those toggles are shown as unavailable rather than
@@ -232,17 +232,17 @@ export default function CardDetailPage() {
                 title="Active rules"
                 description="Enforced by the card issuer on every authorization."
               />
-              <ul className="divide-y divide-border">
+              <ul className="divide-y divide-hairline">
                 {card.rules.map((rule) => (
                   <li
                     key={rule.id}
                     className="flex items-center justify-between px-5 py-3.5"
                   >
                     <div>
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-ui font-semibold text-content-primary">
                         {rule.period === 'DAY' ? 'Daily' : 'Monthly'} velocity limit
                       </p>
-                      <p className="tnum text-xs text-muted-foreground">
+                      <p className="tnum mt-0.5 text-caption text-content-tertiary">
                         {rule.limitAmount ? usd(rule.limitAmount) : '—'} per{' '}
                         {rule.period === 'DAY' ? 'day' : 'month'}
                       </p>
@@ -260,11 +260,11 @@ export default function CardDetailPage() {
           </Panel>
 
           {!closed ? (
-            <Panel className="border-critical/25 bg-critical-soft/40">
+            <Panel>
               <div className="flex flex-wrap items-center justify-between gap-3 p-5">
                 <div>
-                  <p className="text-sm font-medium text-foreground">Close this card</p>
-                  <p className="mt-0.5 text-sm text-muted-foreground">
+                  <p className="text-ui font-semibold text-content-primary">Close this card</p>
+                  <p className="mt-1 text-ui text-content-tertiary">
                     Permanent. A closed card can never be reopened.
                   </p>
                 </div>
@@ -303,9 +303,9 @@ export default function CardDetailPage() {
 
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between px-5 py-3">
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="tnum text-sm font-medium text-foreground">{value}</span>
+    <div className="flex items-center justify-between gap-4 px-5 py-3.5">
+      <span className="text-ui text-content-tertiary">{label}</span>
+      <span className="tnum text-ui font-semibold text-content-primary">{value}</span>
     </div>
   );
 }
@@ -320,15 +320,15 @@ function ControlRow({
   note?: string;
 }) {
   return (
-    <li className="flex items-center justify-between px-5 py-3.5">
+    <li className="flex items-center justify-between gap-4 px-5 py-3.5">
       <div>
-        <p className="text-sm text-foreground">{label}</p>
-        {note ? <p className="text-xs text-muted-foreground">{note}</p> : null}
+        <p className="text-ui text-content-primary">{label}</p>
+        {note ? <p className="mt-0.5 text-caption text-content-tertiary">{note}</p> : null}
       </div>
       {enabled ? (
-        <span className="text-xs font-medium text-positive">Supported</span>
+        <span className="text-caption font-semibold text-positive">Supported</span>
       ) : (
-        <span className="flex items-center gap-1 text-xs text-muted-foreground">
+        <span className="flex items-center gap-1.5 text-caption text-content-tertiary">
           <Lock className="size-3" aria-hidden />
           Unavailable
         </span>

@@ -7,8 +7,8 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { MailCheck } from 'lucide-react';
 import { forgotPasswordSchema } from '@tenzopay/shared';
 import { api } from '@/lib/api';
-import { Button } from '@/components/ui/button';
-import { Alert, Field, Input } from '@/components/ui/primitives';
+import { Button } from '@/components/marketing/ui/button';
+import { Alert, Field, Input } from '@/components/marketing/ui/form';
 
 type FormValues = { email: string };
 
@@ -36,24 +36,25 @@ export default function ForgotPasswordPage() {
   if (sent) {
     return (
       <>
-        <MailCheck className="size-7 text-primary" aria-hidden />
-        <h1 className="mt-4 text-2xl font-semibold tracking-tight text-foreground">
+        <span className="inline-flex size-12 items-center justify-center rounded-full bg-mint text-forest">
+          <MailCheck className="size-5" aria-hidden />
+        </span>
+        <h1 className="mt-6 font-display text-[2rem] font-medium leading-[1.1] tracking-[-0.02em] text-forest">
           Check your email
         </h1>
-        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-          If an account exists for that address, we have sent a link to reset
-          your password.
+        <p className="mt-3 text-body-base leading-relaxed text-moss">
+          If an account exists for that address, we have sent a link to reset your password.
         </p>
 
         {devToken ? (
-          <Alert tone="brand" title="Development mode" className="mt-5">
+          <Alert tone="brand" title="Development mode" className="mt-6">
             <p className="mb-2">
-              No mail transport is configured in this build, so the reset link
-              is shown here instead of being sent.
+              No mail transport is configured in this build, so the reset link is shown here instead
+              of being sent.
             </p>
             <Link
               href={`/reset-password?token=${devToken}`}
-              className="font-medium text-primary underline break-all"
+              className="break-all font-medium text-forest underline underline-offset-4"
             >
               Continue to reset password
             </Link>
@@ -62,7 +63,7 @@ export default function ForgotPasswordPage() {
 
         <Link
           href="/login"
-          className="mt-6 inline-block text-sm font-medium text-primary hover:underline"
+          className="mt-8 inline-block rounded text-[0.9375rem] font-medium text-forest underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright"
         >
           Back to sign in
         </Link>
@@ -72,14 +73,14 @@ export default function ForgotPasswordPage() {
 
   return (
     <>
-      <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+      <h1 className="font-display text-[2rem] font-medium leading-[1.1] tracking-[-0.02em] text-forest">
         Reset your password
       </h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">
+      <p className="mt-3 text-body-base text-moss">
         Enter your email and we will send you a reset link.
       </p>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-4" noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-5" noValidate>
         <Field label="Email" htmlFor="email" error={errors.email?.message}>
           <Input
             id="email"
@@ -91,14 +92,14 @@ export default function ForgotPasswordPage() {
           />
         </Field>
 
-        <Button type="submit" className="w-full" loading={isSubmitting}>
+        <Button type="submit" size="lg" className="w-full" loading={isSubmitting}>
           Send reset link
         </Button>
       </form>
 
       <Link
         href="/login"
-        className="mt-6 inline-block text-sm font-medium text-primary hover:underline"
+        className="mt-8 inline-block rounded text-[0.9375rem] font-medium text-forest underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-bright"
       >
         Back to sign in
       </Link>
