@@ -123,7 +123,9 @@ export function AppShell({
             Top bar: no title, no search, no notification cluster. One or two
             contextual pills and the account chip, floating on the page.
           */}
-          <header className="flex h-16 items-center gap-2 px-4 sm:px-6">
+          {/* Same measure as the content, so the account chip lines up with the
+              right edge of the column instead of drifting to the window edge. */}
+          <header className="mx-auto flex h-16 w-full max-w-[52rem] items-center gap-2 px-4 sm:px-6">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">
@@ -254,9 +256,14 @@ export function AppShell({
 
           {/*
             A narrow measure is a large part of why this reads as calm, so the
-            column stops at 832px and stays left-aligned on wide screens.
+            column stops at 832px — centred in the space beside the rail, so a
+            wide screen leaves even margins either side rather than stranding
+            the content against one edge.
           */}
-          <main id="main" className="w-full max-w-[52rem] px-4 pb-28 pt-10 sm:px-6 lg:pb-16 lg:pt-16">
+          <main
+            id="main"
+            className="mx-auto w-full max-w-[52rem] px-4 pb-28 pt-10 sm:px-6 lg:pb-16 lg:pt-16"
+          >
             {children}
           </main>
         </div>

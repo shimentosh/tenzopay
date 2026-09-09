@@ -97,8 +97,11 @@ rounded-full    50%     → avatars, list-row icon circles
 - Nav item: 20px icon + 14px label, 44px tall, full-width pill. Active =
   `--surface-raised` + 600 + `--content-primary`. **No left accent bar, no
   coloured icons.**
-- Content column **max 832px**, left-aligned, 64px top padding. Dashboard
-  content is never stretched edge-to-edge.
+- Content column **max 832px, centred** in the space beside the rail, 64px top
+  padding. The reference left-aligns it; centred was preferred here, so a wide
+  screen leaves even margins rather than stranding content against one edge.
+  The top bar shares the same measure, so the account chip lines up with the
+  column's right edge instead of drifting to the window edge.
 - Top bar: no title, no search, no notification cluster — one or two contextual
   pills and the account chip, floating on the page background. Search lives in
   the rail (and ⌘K); notifications and the theme toggle sit in the rail footer.
