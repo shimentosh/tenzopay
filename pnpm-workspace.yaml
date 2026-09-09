@@ -1,0 +1,35 @@
+# pnpm ignores package.json's "workspaces" field and needs this file instead.
+# Kept in step with it so `pnpm dev` and `npm run dev` behave identically.
+packages:
+  - 'packages/*'
+  - 'apps/*'
+
+# pnpm blocks dependency build scripts by default. These need theirs: argon2
+# compiles a native binding, prisma emits the client, @swc/core, esbuild and
+# sharp fetch their platform binaries. Without this a pnpm install produces an
+# API that cannot hash a password or reach the database.
+onlyBuiltDependencies:
+  - argon2
+  - '@prisma/client'
+  - prisma
+  - '@swc/core'
+  - esbuild
+  - sharp
+
+# npm always runs `predev`; in pnpm it is a setting that has defaulted off and
+# can differ per machine. `predev` is what builds @tenzopay/shared, so pin it
+# here — otherwise `pnpm dev` can start an API that cannot resolve
+# @tenzopay/shared on a fresh clone.
+enablePrePostScripts: true
+
+# The workspace packages are depended on as "*", not "workspace:*", so that npm
+# keeps working. pnpm 10+ only links local packages when told to — without
+# this, `pnpm install` looks up @tenzopay/shared on the public registry and
+# fails with a 404.
+linkWorkspacePackages: true
+
+# pnpm runs an install check before every `pnpm <script>`. This repo's lockfile
+# is package-lock.json, so that check would try to convert a working
+# npm install into a pnpm one halfway through starting the app. Install
+# deliberately (`pnpm install`, or ./start.sh), and let `pnpm dev` just run.
+verifyDepsBeforeRun: false

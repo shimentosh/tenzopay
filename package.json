@@ -10,6 +10,8 @@
     "node": ">=20.11"
   },
   "scripts": {
+    "start": "bash start.sh",
+    "setup": "bash start.sh --setup-only",
     "build:shared": "npm run build -w @tenzopay/shared",
     "predev": "npm run build:shared",
     "dev": "concurrently -n api,web,admin -c cyan,green,magenta \"npm run dev:api\" \"npm run dev:web\" \"npm run dev:admin\"",
@@ -22,7 +24,8 @@
     "db:seed": "npm run db:seed -w @tenzopay/api",
     "db:studio": "npm run db:studio -w @tenzopay/api",
     "test": "npm run test -w @tenzopay/api",
-    "test:watch": "npm run test:watch -w @tenzopay/api"
+    "test:watch": "npm run test:watch -w @tenzopay/api",
+    "admin:create": "npm run admin:create -w @tenzopay/api --"
   },
   "devDependencies": {
     "concurrently": "^9.1.0",
