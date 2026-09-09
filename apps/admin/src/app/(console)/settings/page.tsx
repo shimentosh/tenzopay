@@ -3,6 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { Check, Lock, Minus } from 'lucide-react';
 import { api } from '@/lib/api';
+import { SettingsEditor } from '@/components/settings-editor';
 import { Alert, Badge, Panel, PanelHeader, Skeleton } from '@/components/ui/primitives';
 import {
   Table,
@@ -99,7 +100,7 @@ export default function ConsoleSettingsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-4xl space-y-5">
+    <div className="space-y-5">
       <Panel>
         <PanelHeader title="Your access" />
         <dl className="divide-y">
@@ -182,6 +183,8 @@ export default function ConsoleSettingsPage() {
           a live deployment.
         </Alert>
       ) : null}
+
+      <SettingsEditor />
 
       <Panel>
         <PanelHeader

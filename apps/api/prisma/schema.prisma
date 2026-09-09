@@ -124,17 +124,17 @@ model AccountHolder {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Lithic identifiers. Unique so a retry can never create a second holder.
-  providerName             String    @default("lithic")
+  providerName               String  @default("lithic")
   providerAccountHolderToken String? @unique
-  providerAccountToken     String?   @unique
+  providerAccountToken       String? @unique
 
-  status        KycStatus @default(NOT_STARTED)
-  statusReasons String[]  @default([])
-  workflow      String? // e.g. KYC_BASIC
+  status           KycStatus @default(NOT_STARTED)
+  statusReasons    String[]  @default([])
+  workflow         String? // e.g. KYC_BASIC
   // No raw government ID is stored. Only a one-way hash for duplicate detection.
   governmentIdHash String?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 
   @@map("account_holders")
 }
@@ -211,14 +211,14 @@ enum LedgerTransactionType {
 
 /// A balanced group of entries. Entries within one transaction MUST sum to zero.
 model LedgerTransaction {
-  id     String                @id @default(uuid()) @db.Uuid
-  type   LedgerTransactionType
+  id             String                @id @default(uuid()) @db.Uuid
+  type           LedgerTransactionType
   /// Natural key of the real-world event, e.g. "deposit:<id>:confirm" or
   /// "auth:<lithicToken>". UNIQUE — this is what makes posting idempotent.
-  idempotencyKey String         @unique
+  idempotencyKey String                @unique
   description    String?
   metadata       Json?
-  createdAt      DateTime       @default(now())
+  createdAt      DateTime              @default(now())
 
   entries LedgerEntry[]
 
@@ -265,18 +265,18 @@ enum DepositAddressStatus {
 }
 
 model DepositAddress {
-  id       String            @id @default(uuid()) @db.Uuid
-  walletId String            @db.Uuid
-  wallet   Wallet            @relation(fields: [walletId], references: [id], onDelete: Cascade)
-  network  BlockchainNetwork
-  address  String
+  id                     String               @id @default(uuid()) @db.Uuid
+  walletId               String               @db.Uuid
+  wallet                 Wallet               @relation(fields: [walletId], references: [id], onDelete: Cascade)
+  network                BlockchainNetwork
+  address                String
   /// BIP-44 index: m/44'/60'/0'/0/{derivationIndex}. Derived from an xpub only.
-  derivationIndex Int
-  status   DepositAddressStatus @default(ACTIVE)
+  derivationIndex        Int
+  status                 DepositAddressStatus @default(ACTIVE)
   /// True when the address exists only for demo mode and can never receive real funds.
-  isDemo   Boolean           @default(false)
-  registeredWithProvider Boolean @default(false)
-  createdAt DateTime         @default(now())
+  isDemo                 Boolean              @default(false)
+  registeredWithProvider Boolean              @default(false)
+  createdAt              DateTime             @default(now())
 
   deposits Deposit[]
 
@@ -301,35 +301,35 @@ enum DepositSource {
 }
 
 model Deposit {
-  id       String @id @default(uuid()) @db.Uuid
-  userId   String @db.Uuid
-  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  addressId String? @db.Uuid
-  address  DepositAddress? @relation(fields: [addressId], references: [id])
+  id        String          @id @default(uuid()) @db.Uuid
+  userId    String          @db.Uuid
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addressId String?         @db.Uuid
+  address   DepositAddress? @relation(fields: [addressId], references: [id])
 
-  network       BlockchainNetwork
+  network  BlockchainNetwork
   /// Minor units (6dp for USDT)
-  amount        BigInt
-  currency      String            @default("USDT")
-  status        DepositStatus     @default(PENDING)
-  source        DepositSource     @default(ONCHAIN)
+  amount   BigInt
+  currency String            @default("USDT")
+  status   DepositStatus     @default(PENDING)
+  source   DepositSource     @default(ONCHAIN)
 
-  txHash        String?
+  txHash                String?
   /// Index of the ERC-20 Transfer log inside the tx. One tx may hold several
   /// transfers, so (network, txHash, logIndex) is the true natural key.
-  logIndex      Int?
-  fromAddress   String?
-  toAddress     String?
-  contractAddress String?
-  blockNumber   BigInt?
-  confirmations Int               @default(0)
-  requiredConfirmations Int        @default(12)
+  logIndex              Int?
+  fromAddress           String?
+  toAddress             String?
+  contractAddress       String?
+  blockNumber           BigInt?
+  confirmations         Int     @default(0)
+  requiredConfirmations Int     @default(12)
 
-  detectedAt  DateTime?
-  confirmedAt DateTime?
-  failureReason String?
+  detectedAt          DateTime?
+  confirmedAt         DateTime?
+  failureReason       String?
   /// Set once the ledger credit has been posted. Guards against double credit.
-  ledgerTransactionId String?     @unique @db.Uuid
+  ledgerTransactionId String?   @unique @db.Uuid
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -343,19 +343,19 @@ model Deposit {
 
 /// Raw chain observations, kept for audit/forensics independent of Deposit state.
 model BlockchainTransaction {
-  id        String            @id @default(uuid()) @db.Uuid
-  network   BlockchainNetwork
-  txHash    String
-  logIndex  Int
-  blockNumber BigInt
-  blockHash String?
-  fromAddress String
-  toAddress   String
+  id              String            @id @default(uuid()) @db.Uuid
+  network         BlockchainNetwork
+  txHash          String
+  logIndex        Int
+  blockNumber     BigInt
+  blockHash       String?
+  fromAddress     String
+  toAddress       String
   contractAddress String
-  rawValue  String
-  amount    BigInt
-  observedAt DateTime         @default(now())
-  raw       Json?
+  rawValue        String
+  amount          BigInt
+  observedAt      DateTime          @default(now())
+  raw             Json?
 
   @@unique([network, txHash, logIndex])
   @@index([toAddress])
@@ -386,10 +386,10 @@ model Card {
   userId String @db.Uuid
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  name         String
-  providerName String @default("lithic")
+  name                 String
+  providerName         String  @default("lithic")
   /// Lithic card token. Unique so a retried create cannot duplicate a card.
-  providerCardToken String @unique
+  providerCardToken    String  @unique
   providerAccountToken String?
 
   /// Last four only. Full PAN/CVV are NEVER stored — revealed via Lithic's
@@ -403,11 +403,11 @@ model Card {
   status CardStatus @default(ACTIVE)
 
   /// Mirror of the Lithic card-level spend limit (minor units, USD cents).
-  spendLimit         BigInt?
-  spendLimitDuration SpendLimitDuration @default(MONTHLY)
+  spendLimit          BigInt?
+  spendLimitDuration  SpendLimitDuration @default(MONTHLY)
   /// TenzoPay-enforced limits, checked by ASA against the shared balance.
-  dailyLimit         BigInt?
-  monthlyLimit       BigInt?
+  dailyLimit          BigInt?
+  monthlyLimit        BigInt?
   perTransactionLimit BigInt?
 
   lastSyncedAt DateTime?
@@ -477,23 +477,23 @@ model CardTransaction {
   /// Lithic transaction token — unique, drives webhook idempotency.
   providerTransactionToken String @unique
 
-  status         CardTransactionStatus @default(PENDING)
+  status           CardTransactionStatus @default(PENDING)
   /// Minor units, USD cents
-  amount         BigInt
-  settledAmount  BigInt?
-  currency       String                @default("USD")
-  merchantName   String?
+  amount           BigInt
+  settledAmount    BigInt?
+  currency         String                @default("USD")
+  merchantName     String?
   merchantCategory String?
-  mcc            String?
-  merchantCountry String?
-  networkResult  String?
-  declineReason  String?
+  mcc              String?
+  merchantCountry  String?
+  networkResult    String?
+  declineReason    String?
 
-  authorizedAt DateTime?
-  settledAt    DateTime?
+  authorizedAt              DateTime?
+  settledAt                 DateTime?
   /// Ledger transaction that placed the hold, so it can be released precisely.
-  holdLedgerTransactionId String? @db.Uuid
-  settleLedgerTransactionId String? @db.Uuid
+  holdLedgerTransactionId   String?   @db.Uuid
+  settleLedgerTransactionId String?   @db.Uuid
 
   raw       Json?
   createdAt DateTime @default(now())
@@ -521,20 +521,20 @@ enum AuthorizationDecision {
 /// One row per ASA callback. Deduped on providerEventToken so a Lithic retry
 /// re-uses the original decision instead of placing a second hold.
 model AuthorizationEvent {
-  id                String  @id @default(uuid()) @db.Uuid
-  transactionId     String? @db.Uuid
-  transaction       CardTransaction? @relation(fields: [transactionId], references: [id])
-  providerEventToken String @unique
-  cardToken         String
-  userId            String? @db.Uuid
+  id                 String           @id @default(uuid()) @db.Uuid
+  transactionId      String?          @db.Uuid
+  transaction        CardTransaction? @relation(fields: [transactionId], references: [id])
+  providerEventToken String           @unique
+  cardToken          String
+  userId             String?          @db.Uuid
 
-  amount            BigInt
-  decision          AuthorizationDecision
-  reason            String?
+  amount                     BigInt
+  decision                   AuthorizationDecision
+  reason                     String?
   availableBalanceAtDecision BigInt?
-  latencyMs         Int?
-  raw               Json?
-  createdAt         DateTime @default(now())
+  latencyMs                  Int?
+  raw                        Json?
+  createdAt                  DateTime              @default(now())
 
   @@index([cardToken, createdAt])
   @@map("authorization_events")
@@ -581,14 +581,14 @@ model WebhookEvent {
 
 /// Generic idempotency for inbound API mutations (e.g. create-card retries).
 model IdempotencyKey {
-  id         String   @id @default(uuid()) @db.Uuid
-  key        String
-  scope      String
-  userId     String?  @db.Uuid
+  id          String   @id @default(uuid()) @db.Uuid
+  key         String
+  scope       String
+  userId      String?  @db.Uuid
   requestHash String
-  response   Json?
-  statusCode Int?
-  createdAt  DateTime @default(now())
+  response    Json?
+  statusCode  Int?
+  createdAt   DateTime @default(now())
 
   @@unique([scope, key])
   @@index([createdAt])
@@ -607,15 +607,15 @@ enum FeeType {
 }
 
 model Fee {
-  id       String  @id @default(uuid()) @db.Uuid
-  userId   String  @db.Uuid
-  type     FeeType
-  amount   BigInt
-  currency String  @default("USDT")
+  id                  String   @id @default(uuid()) @db.Uuid
+  userId              String   @db.Uuid
+  type                FeeType
+  amount              BigInt
+  currency            String   @default("USDT")
   /// Set once charged, links to the balanced posting.
-  ledgerTransactionId String? @unique @db.Uuid
-  description String?
-  createdAt DateTime @default(now())
+  ledgerTransactionId String?  @unique @db.Uuid
+  description         String?
+  createdAt           DateTime @default(now())
 
   @@index([userId, createdAt])
   @@map("fees")
@@ -652,6 +652,7 @@ enum AdminActionType {
   RETRY_DEPOSIT_RECONCILIATION
   REPLAY_WEBHOOK
   KYC_OVERRIDE
+  SETTING_UPDATED
 }
 
 /// Every privileged admin operation, with a mandatory reason.
@@ -683,16 +684,41 @@ enum NotificationType {
 }
 
 model Notification {
-  id     String           @id @default(uuid()) @db.Uuid
-  userId String           @db.Uuid
-  user   User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  type   NotificationType
-  title  String
-  body   String
-  readAt DateTime?
-  metadata Json?
-  createdAt DateTime      @default(now())
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @db.Uuid
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      NotificationType
+  title     String
+  body      String
+  readAt    DateTime?
+  metadata  Json?
+  createdAt DateTime         @default(now())
 
   @@index([userId, readAt])
   @@map("notifications")
+}
+
+// ===========================================================================
+// Operational settings
+// ===========================================================================
+
+/**
+ * Staff-editable operational values.
+ * Deliberately narrow. Secrets and wallet material stay in the environment,
+ * validated at boot — putting them here would mean one compromised admin
+ * session could silently redirect every future deposit. What lives here is
+ * the safe half: prices, thresholds and rates, each one written through an
+ * audited action with a mandatory reason.
+ * Values are stored as strings and parsed against a typed registry in
+ * SettingsService, so adding a setting never needs a migration.
+ */
+model Setting {
+  key         String   @id
+  value       String
+  /// The admin who last changed it. Null for a value still at its default.
+  updatedById String?  @db.Uuid
+  updatedAt   DateTime @updatedAt
+  createdAt   DateTime @default(now())
+
+  @@map("settings")
 }

@@ -3,6 +3,7 @@ import { AdminRole } from '@prisma/client';
 import { z } from 'zod';
 import { adminAdjustmentSchema, type AdminAdjustmentInput } from '@tenzopay/shared';
 import { AdminService } from './admin.service';
+import { SettingsService } from './settings.service';
 import { AdminGuard, CurrentAdmin, Roles, type RequestAdmin } from '../auth/guards';
 import { zodPipe } from '../common/zod-validation.pipe';
 
@@ -17,6 +18,11 @@ const reasonSchema = z.object({
   reason: z.string().min(10, 'Give a reason of at least 10 characters').max(500),
 });
 
+const settingSchema = reasonSchema.extend({
+  key: z.string().min(1).max(80),
+  value: z.string().min(1).max(40),
+});
+
 const userStatusSchema = reasonSchema.extend({
   status: z.enum(['FROZEN', 'ACTIVE']),
 });
@@ -24,7 +30,10 @@ const userStatusSchema = reasonSchema.extend({
 @Controller('admin')
 @UseGuards(AdminGuard)
 export class AdminController {
-  constructor(private readonly admin: AdminService) {}
+  constructor(
+    private readonly admin: AdminService,
+    private readonly settings: SettingsService,
+  ) {}
 
   @Get('me')
   async me(@CurrentAdmin() admin: RequestAdmin) {
@@ -47,6 +56,44 @@ export class AdminController {
    * Read-only, but finance data all the same: gated to ADMIN and FINANCE
    * rather than every signed-in staff member.
    */
+  // ------------------------------------------------------------ Settings ----
+
+  /**
+   * Operational settings, plus the *status* of every credential.
+   *
+   * Credentials themselves are never returned — only whether each is present
+   * and a short fingerprint, which is enough to confirm a rotation took effect
+   * without disclosing anything usable.
+   */
+  @Get('settings')
+  @Roles(AdminRole.ADMIN, AdminRole.FINANCE)
+  async listSettings() {
+    const [settings, credentials] = await Promise.all([
+      this.settings.all(),
+      Promise.resolve(this.settings.credentialStatus()),
+    ]);
+    return { settings, credentials };
+  }
+
+  /**
+   * Change one setting. Reason mandatory, same as a balance correction —
+   * it lands in admin_actions and audit_logs with the previous value.
+   */
+  @Post('settings')
+  @Roles(AdminRole.ADMIN, AdminRole.FINANCE)
+  async updateSetting(
+    @CurrentAdmin() admin: RequestAdmin,
+    @Body(zodPipe(settingSchema)) body: { key: string; value: string; reason: string },
+  ) {
+    return this.settings.set({
+      adminId: admin.id,
+      adminRole: admin.role,
+      key: body.key,
+      value: body.value,
+      reason: body.reason,
+    });
+  }
+
   @Get('revenue')
   @Roles(AdminRole.ADMIN, AdminRole.FINANCE)
   async revenue(@Query('days') days?: string) {

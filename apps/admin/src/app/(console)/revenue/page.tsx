@@ -23,6 +23,12 @@ interface Revenue {
     createdAt: string;
     ledgerTransactionId: string | null;
   }[];
+  cost: {
+    pricesSet: boolean;
+    estimated: string;
+    margin: string;
+    lines: { label: string; units: number; unitPrice: string; amount: string }[];
+  };
   costDrivers: {
     cardsIssued: number;
     transactionsSettled: number;
@@ -199,8 +205,68 @@ export default function RevenuePage() {
 
       <Panel>
         <PanelHeader
+          title="Cost and margin"
+          description={
+            data?.cost.pricesSet
+              ? 'Estimated from the unit prices entered in Settings. Providers are not queried, so treat this as your own arithmetic rather than an invoice.'
+              : 'No unit prices are set yet. Enter them under Settings and this becomes real cost and margin.'
+          }
+        />
+        {isLoading ? (
+          <div className="space-y-2 p-5">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : (
+          <>
+            <div className="grid gap-6 px-5 pt-5 sm:grid-cols-2">
+              <div>
+                <p className="text-ui text-content-tertiary">Estimated cost</p>
+                <p className="tnum mt-2 text-subtitle font-semibold text-content-primary">
+                  {money(data?.cost.estimated ?? '0')} {data?.currency}
+                </p>
+              </div>
+              <div>
+                <p className="text-ui text-content-tertiary">Margin</p>
+                <p
+                  className={`tnum mt-2 text-subtitle font-semibold ${
+                    BigInt(data?.cost.margin ?? '0') < 0n
+                      ? 'text-negative'
+                      : 'text-content-primary'
+                  }`}
+                >
+                  {money(data?.cost.margin ?? '0')} {data?.currency}
+                </p>
+              </div>
+            </div>
+
+            <ul className="mt-4 divide-y divide-hairline">
+              {data?.cost.lines.map((line) => (
+                <li
+                  key={line.label}
+                  className="flex items-center justify-between gap-4 px-5 py-3"
+                >
+                  <div className="min-w-0">
+                    <p className="text-ui text-content-primary">{line.label}</p>
+                    <p className="tnum mt-0.5 text-caption text-content-tertiary">
+                      {line.units} x {money(line.unitPrice)}
+                    </p>
+                  </div>
+                  <span className="tnum text-ui font-semibold text-content-primary">
+                    {money(line.amount)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+      </Panel>
+
+      <Panel>
+        <PanelHeader
           title="Cost drivers"
-          description="What providers bill for. Counts only — no unit price is stored anywhere in this system, so cost is deliberately not guessed at."
+          description="The raw volume providers bill against, whether or not unit prices are set."
         />
         {isLoading ? (
           <div className="grid gap-4 p-5 sm:grid-cols-4">

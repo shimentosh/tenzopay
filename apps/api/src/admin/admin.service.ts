@@ -12,6 +12,7 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { LedgerService } from '../ledger/ledger.service';
+import { SettingsService } from './settings.service';
 import { DepositsService } from '../deposits/deposits.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { CARD_PROVIDER, type CardProvider } from '../providers/card-provider.interface';
@@ -41,6 +42,7 @@ export class AdminService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ledger: LedgerService,
+    private readonly settings: SettingsService,
     private readonly deposits: DepositsService,
     private readonly webhooks: WebhooksService,
     @Inject(CARD_PROVIDER) private readonly cardProvider: CardProvider,
@@ -671,6 +673,62 @@ export class AdminService {
 
     const windowAmount = windowTotal._sum.amount ?? 0n;
 
+    /**
+     * Estimated cost.
+     *
+     * Every unit price here was typed in by a member of staff — nothing in the
+     * system observes what a provider actually bills. So this is an estimate
+     * and is labelled as one. With the prices left at zero it reports zero
+     * rather than a guess.
+     */
+    const prices = await this.settings.getMany([
+      'cost.card_issuance',
+      'cost.card_monthly',
+      'cost.transaction',
+      'cost.deposit',
+      'cost.fixed_monthly',
+    ]);
+    const activeCards = await this.prisma.card.count({ where: { status: CardStatus.ACTIVE } });
+
+    // Monthly charges are pro-rated across the window rather than counted whole.
+    const monthFraction = (value: bigint) => (value * BigInt(days)) / 30n;
+
+    const costLines = [
+      {
+        label: 'Card issuance',
+        units: cardsIssued,
+        unitPrice: prices['cost.card_issuance'].toString(),
+        amount: (BigInt(cardsIssued) * prices['cost.card_issuance']).toString(),
+      },
+      {
+        label: 'Active cards (monthly)',
+        units: activeCards,
+        unitPrice: prices['cost.card_monthly'].toString(),
+        amount: monthFraction(BigInt(activeCards) * prices['cost.card_monthly']).toString(),
+      },
+      {
+        label: 'Settled transactions',
+        units: transactionsSettled,
+        unitPrice: prices['cost.transaction'].toString(),
+        amount: (BigInt(transactionsSettled) * prices['cost.transaction']).toString(),
+      },
+      {
+        label: 'Confirmed deposits',
+        units: depositsConfirmed,
+        unitPrice: prices['cost.deposit'].toString(),
+        amount: (BigInt(depositsConfirmed) * prices['cost.deposit']).toString(),
+      },
+      {
+        label: 'Fixed monthly',
+        units: 1,
+        unitPrice: prices['cost.fixed_monthly'].toString(),
+        amount: monthFraction(prices['cost.fixed_monthly']).toString(),
+      },
+    ];
+
+    const estimatedCost = costLines.reduce((total, line) => total + BigInt(line.amount), 0n);
+    const pricesSet = Object.values(prices).some((price) => price > 0n);
+
     return {
       days,
       currency: 'USDT',
@@ -695,10 +753,14 @@ export class AdminService {
         amount: fee.amount.toString(),
         createdAt: fee.createdAt.toISOString(),
       })),
-      /**
-       * What we get billed for. Unit prices are not in this system, so these
-       * are counts rather than money — deliberately not guessed at.
-       */
+      cost: {
+        /** False until someone enters unit prices; the UI says so rather than showing a confident zero. */
+        pricesSet,
+        estimated: estimatedCost.toString(),
+        lines: costLines,
+        margin: (windowAmount - estimatedCost).toString(),
+      },
+      /** The volume providers bill against, whether or not prices are set. */
       costDrivers: {
         cardsIssued,
         transactionsSettled,
