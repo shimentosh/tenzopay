@@ -94,17 +94,17 @@
   --content-primary: #0e0f0c;
   --content-secondary: #454745; /* the DEFAULT text colour */
   --content-tertiary: #6a6c6a;
-  --content-on-accent: #163300; /* dark text that sits ON the accent fill */
+  --content-on-accent: #ffffff; /* text that sits ON the accent fill */
 
-  /* Interactive accent — light fill, dark text. This inversion is the system. */
-  --brand: #9fe870;
-  --brand-hover: #8bda57;
-  --brand-active: #79c93f;
+  /* Interactive accent. Loud, and the only loud thing on a screen. */
+  --brand: #0057fc;
+  --brand-hover: #004ee0;
+  --brand-active: #0045c9;
 
   /* Surfaces — page is white, cards are tinted. Inverted from the usual. */
   --surface-page: #ffffff;
-  --surface-raised: rgb(22 51 0 / 0.08); /* accent hue at 8% over white */
-  --surface-raised-hover: rgb(22 51 0 / 0.12);
+  --surface-raised: rgb(0 87 252 / 0.08); /* accent hue at 8% over white */
+  --surface-raised-hover: rgb(0 87 252 / 0.12);
   --surface-inset: #ffffff; /* inputs sitting INSIDE a tinted card */
 
   /* Semantic — text only, never fills. Used sparingly.
@@ -119,8 +119,8 @@
   --hairline: rgb(14 15 12 / 0.12);
 
   /* The card face is a physical object, so it keeps its own dark ground. */
-  --card-face: #163300;
-  --card-face-frozen: #46503f;
+  --card-face: #0a1633;
+  --card-face-frozen: #3f4653;
   --card-face-closed: #6a6c6a;
 
   /* ---- shadcn semantic tokens, pointed at the above ---- */
@@ -152,8 +152,8 @@
   --ring: var(--brand);
 
   /* Charts: one line, in a dark shade of the accent hue. */
-  --chart-1: #3f7a1f;
-  --chart-2: #6aa843;
+  --chart-1: #0043c4;
+  --chart-2: #4d8bff;
   --chart-3: var(--content-tertiary);
   --chart-4: var(--positive);
   --chart-5: var(--warning);
@@ -179,11 +179,13 @@
   --content-primary: #f4f5f3;
   --content-secondary: rgb(244 245 243 / 0.72);
   --content-tertiary: rgb(244 245 243 / 0.55);
-  --content-on-accent: #163300;
+  --content-on-accent: #ffffff;
 
-  --brand: #9fe870;
-  --brand-hover: #aeee87;
-  --brand-active: #c0f3a2;
+  /* Identical to light: at 3.45:1 against the dark page it still
+     reads as a control, and white on it stays at 5.57:1. */
+  --brand: #0057fc;
+  --brand-hover: #1a68ff;
+  --brand-active: #3d81ff;
 
   --surface-page: #0e0f0c;
   --surface-raised: rgb(255 255 255 / 0.06);
@@ -197,14 +199,14 @@
 
   --hairline: rgb(255 255 255 / 0.14);
 
-  --card-face: #1d3f08;
+  --card-face: #10254f;
   --card-face-frozen: #46503f;
   --card-face-closed: #52544f;
 
   --destructive-foreground: #0e0f0c;
 
-  --chart-1: #9fe870;
-  --chart-2: #6aa843;
+  --chart-1: #4d8bff;
+  --chart-2: #0057fc;
 }
 
 @theme inline {

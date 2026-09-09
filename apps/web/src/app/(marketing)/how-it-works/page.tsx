@@ -47,7 +47,7 @@ export default function HowItWorksPage() {
                 <div className="flex gap-6 border-b border-edge py-8 first:pt-0 md:gap-10">
                   <span
                     aria-hidden
-                    className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-bright font-display text-[1rem] font-medium text-forest"
+                    className="inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-bright font-display text-[1rem] font-medium text-paper"
                   >
                     {String(index + 1).padStart(2, '0')}
                   </span>

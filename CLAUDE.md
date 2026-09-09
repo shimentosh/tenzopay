@@ -163,10 +163,11 @@ than wrapping them.
   its `cn` import to `@/lib/utils`, and check it has not overwritten
   `button.tsx` or `lib/utils.ts` (the CLI does both).
 - **Dark mode is live.** Any new colour must come from a semantic token, or it
-  will look correct in one theme and broken in the other. The accent is
-  deliberately *identical* in both themes and is always paired with
-  `text-content-on-accent` — never `text-white`. Surfaces flip:
-  `--surface-raised` is a green tint on white and a white tint on near-black.
+  will look correct in one theme and broken in the other. The accent
+  (`#0057FC`) is deliberately *identical* in both themes and is always paired
+  with `text-content-on-accent`, which is white — never a hardcoded colour.
+  Surfaces flip: `--surface-raised` is a blue tint on white and a white tint on
+  near-black.
 
 ## Code layout
 

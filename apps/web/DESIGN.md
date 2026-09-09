@@ -23,10 +23,10 @@ reads tokens; no component file contains a raw colour.
 | `--content-primary` | `#0E0F0C` | headings, amounts, active nav |
 | `--content-secondary` | `#454745` | body copy — **the default text colour** |
 | `--content-tertiary` | `#6A6C6A` | timestamps, meta, axis labels |
-| `--content-on-accent` | `#163300` | dark text that sits ON the accent |
-| `--brand` | `#9FE870` | the accent. Light fill, dark text |
+| `--content-on-accent` | `#FFFFFF` | text that sits ON the accent |
+| `--brand` | `#0057FC` | the accent |
 | `--surface-page` | `#FFFFFF` | the page |
-| `--surface-raised` | `rgb(22 51 0 / 0.08)` | cards, list hover, nav active |
+| `--surface-raised` | `rgb(0 87 252 / 0.08)` | cards, list hover, nav active |
 | `--surface-inset` | `#FFFFFF` | inputs inside a tinted card |
 | `--hairline` | `rgb(14 15 12 / 0.12)` | the only "border" in the system |
 | `--positive` `--negative` `--warning` `--info` | — | **text only**, never fills |
@@ -43,8 +43,9 @@ Rules:
   `StatusBadge` are tinted surfaces with coloured *text*.
 - **Zero gradients, zero glassmorphism, zero colour-on-colour.**
 - **Dark mode keeps the same structure**: near-black page, `rgb(255 255 255 /
-  0.06)` raised surfaces, and an **identical accent** — a light accent works in
-  both themes, which is why a light accent was chosen.
+  0.06)` raised surfaces, and an **identical accent**. `#0057FC` measures
+  3.45:1 against the dark page, so it still reads as a control, and white on it
+  holds 5.57:1 in both themes.
 
 ## Type
 
@@ -87,8 +88,10 @@ rounded-full    50%     → avatars, list-row icon circles
   step. The exceptions are a divider inside a list container, the vertical rule
   in `InfoStrip`, and the mobile bottom bar — all `--hairline`.
 - Buttons: pill, 48px tall (`size="default"`), 24px horizontal padding, 14px/600
-  label. Primary = accent fill + `--content-on-accent`. Secondary =
-  `--surface-raised` + `--content-primary`. Ghost = text only.
+  label. Primary = accent fill + `--content-on-accent`, which is **white**:
+  the accent is a deep blue, and the previous dark-on-accent text measured
+  2.50:1 against it. Secondary = `--surface-raised` + `--content-primary`.
+  Ghost = text only.
 
 ## Shell
 

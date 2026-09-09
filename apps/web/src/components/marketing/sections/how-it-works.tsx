@@ -102,7 +102,7 @@ export function HowItWorks() {
             {steps.map((step, index) => (
               <li key={step.number}>
                 <Reveal delay={index * 0.08}>
-                  <span className="inline-flex size-14 items-center justify-center rounded-full bg-bright font-display text-[1.125rem] font-medium text-forest">
+                  <span className="inline-flex size-14 items-center justify-center rounded-full bg-bright font-display text-[1.125rem] font-medium text-paper">
                     {step.number}
                   </span>
                   <h3 className="mt-7 font-display text-h3 font-medium text-forest">{step.title}</h3>

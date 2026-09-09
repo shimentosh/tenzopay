@@ -69,7 +69,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
           <ul className="space-y-4">
             {proof.map((item) => (
               <li key={item} className="flex items-start gap-3">
-                <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-bright text-forest">
+                <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-bright text-paper">
                   <Check className="size-3" />
                 </span>
                 <span className="max-w-sm text-[0.9375rem] leading-relaxed text-paper/70">{item}</span>

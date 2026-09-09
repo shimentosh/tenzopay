@@ -15,9 +15,9 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        bright: '#9FE870',
-        brightDeep: '#8BDA57',
-        forest: '#163300',
+        bright: '#0057FC',
+        brightDeep: '#004EE0',
+        forest: '#0A1633',
         // The deliberately dark chrome — footer, card faces, code window,
         // phone frame — is drawn on `ink`. Seven components referenced it
         // before it existed here, and a missing colour emits no rule at all:
@@ -27,7 +27,7 @@ const config: Config = {
         // signed-in app uses for its dark chrome.
         ink: '#0A0A08',
         moss: '#454B45',
-        mint: '#D3F4C5',
+        mint: '#DCE8FF',
         paper: '#FFFFFF',
         bone: '#F9F9F7',
         sand: '#F0EEE4',

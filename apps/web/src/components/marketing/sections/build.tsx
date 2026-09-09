@@ -74,7 +74,7 @@ export function Build() {
             <ul className="mt-9 space-y-5">
               {points.map((point) => (
                 <li key={point} className="flex items-start gap-3">
-                  <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-bright text-forest">
+                  <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-bright text-paper">
                     <Check className="size-3" aria-hidden />
                   </span>
                   <span className="max-w-md text-body-base text-paper/75">{point}</span>

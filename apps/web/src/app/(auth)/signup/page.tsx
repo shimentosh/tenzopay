@@ -112,7 +112,7 @@ export default function SignupPage() {
                 <span
                   className={cn(
                     'flex size-4 items-center justify-center rounded-full transition-colors duration-200',
-                    met ? 'bg-bright text-forest' : 'bg-edge text-transparent',
+                    met ? 'bg-bright text-paper' : 'bg-edge text-transparent',
                   )}
                   aria-hidden
                 >

@@ -21,12 +21,12 @@ export function FinalCta() {
 
         <div className="relative mx-auto max-w-2xl text-center">
           <Reveal>
-            <h2 id="cta-heading" className="font-display text-h2 font-medium text-forest">
+            <h2 id="cta-heading" className="font-display text-h2 font-medium text-paper">
               Your first card is a minute away.
             </h2>
           </Reveal>
           <Reveal delay={0.08}>
-            <p className="mx-auto mt-5 max-w-md text-body-lg text-forest/70">
+            <p className="mx-auto mt-5 max-w-md text-body-lg text-paper/80">
               Open an account, set a ceiling, and see the whole thing work end to end.
             </p>
           </Reveal>
@@ -41,7 +41,7 @@ export function FinalCta() {
             </div>
           </Reveal>
           <Reveal delay={0.24}>
-            <p className="mt-6 text-[0.8125rem] text-forest/70">
+            <p className="mt-6 text-[0.8125rem] text-paper/80">
               Starter is free and stays free. Nothing to cancel.
             </p>
           </Reveal>

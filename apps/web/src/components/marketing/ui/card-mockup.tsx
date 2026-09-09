@@ -8,7 +8,7 @@ import { TILT_SPRING, useReducedMotionSafe } from '@/lib/motion';
 export type CardTone = 'bright' | 'forest' | 'coral' | 'ink';
 
 const tones: Record<CardTone, string> = {
-  bright: 'bg-bright text-forest',
+  bright: 'bg-bright text-paper',
   forest: 'bg-forest text-paper',
   coral: 'bg-coral text-forest',
   ink: 'bg-ink text-paper',

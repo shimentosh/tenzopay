@@ -52,7 +52,7 @@ function VerifyEmail() {
   if (state === 'done') {
     return (
       <div className="text-center">
-        <span className="inline-flex size-12 items-center justify-center rounded-full bg-bright text-forest">
+        <span className="inline-flex size-12 items-center justify-center rounded-full bg-bright text-paper">
           <BadgeCheck className="size-6" aria-hidden />
         </span>
         <h1 className="mt-6 font-display text-[2rem] font-medium leading-[1.1] tracking-[-0.02em] text-forest">

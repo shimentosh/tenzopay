@@ -189,7 +189,7 @@ export function UseCases() {
                   <ul className="mt-7 space-y-4">
                     {current.bullets.map((bullet) => (
                       <li key={bullet} className="flex items-start gap-3">
-                        <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-bright text-forest">
+                        <span className="mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-bright text-paper">
                           <Check className="size-3" aria-hidden />
                         </span>
                         <span className="text-body-base text-moss">{bullet}</span>

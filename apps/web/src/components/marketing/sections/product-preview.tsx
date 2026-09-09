@@ -105,7 +105,7 @@ export function ProductPreview() {
                   </div>
 
                   <div className="flex gap-2">
-                    <span className="inline-flex items-center gap-2 rounded-full bg-bright px-4 py-2 text-[0.8125rem] font-medium text-forest">
+                    <span className="inline-flex items-center gap-2 rounded-full bg-bright px-4 py-2 text-[0.8125rem] font-medium text-paper">
                       <ArrowDownToLine className="size-4" aria-hidden />
                       Deposit
                     </span>

@@ -110,7 +110,7 @@ function NotificationTile() {
                   transition={{ duration: reduce ? 0.2 : 0.5, ease: EASE }}
                   className="flex items-start gap-3 rounded-2xl bg-paper/10 p-3 backdrop-blur-sm"
                 >
-                  <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-bright text-forest">
+                  <span className="inline-flex size-7 shrink-0 items-center justify-center rounded-lg bg-bright text-paper">
                     <item.icon className="size-3.5" aria-hidden />
                   </span>
                   <span className="min-w-0">

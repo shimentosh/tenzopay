@@ -103,7 +103,7 @@ export default function CardsPage() {
                         className="flex size-6 shrink-0 items-center justify-center rounded-full bg-bright"
                         aria-hidden
                       >
-                        <Check className="size-3.5 text-forest" strokeWidth={3} />
+                        <Check className="size-3.5 text-paper" strokeWidth={3} />
                       </span>
                     ) : (
                       <span
