@@ -202,7 +202,7 @@ export class WebhooksService {
 
     const existing = await this.prisma.cardTransaction.findUnique({
       where: { providerTransactionToken: token },
-      select: { id: true, status: true, amount: true },
+      select: { id: true, status: true, amount: true, feeAmount: true },
     });
 
     const record = await this.prisma.cardTransaction.upsert({
@@ -233,7 +233,14 @@ export class WebhooksService {
     // Only act on the ledger when the state actually changes.
     if (existing?.status === mapped) return;
 
-    const heldUsdt = (existing?.amount ?? holdCents) * 10_000n;
+    /**
+     * The hold placed at authorization was the spend PLUS the reserved fee, so
+     * both the settlement and the release have to account for it. Reading the
+     * fee off the stored row rather than recomputing it means a rate changed
+     * between tap and capture cannot leave a hold half-released.
+     */
+    const feeUsdt = existing?.feeAmount ?? 0n;
+    const heldUsdt = (existing?.amount ?? holdCents) * 10_000n + feeUsdt;
 
     if (mapped === CardTransactionStatus.SETTLED) {
       const settledUsdt = (settlementCents > 0n ? settlementCents : holdCents) * 10_000n;
@@ -243,6 +250,7 @@ export class WebhooksService {
         idempotencyKey: `settle:${token}`,
         heldAmount: heldUsdt,
         settledAmount: settledUsdt,
+        feeAmount: feeUsdt,
         description: `Card settlement — ${card.name}`,
         metadata: { cardId: card.id, transactionToken: token },
       });

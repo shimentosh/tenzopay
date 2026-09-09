@@ -4,14 +4,22 @@ import {
   CardRuleType,
   CardStatus,
   CardTransactionStatus,
+  FeeType,
   NotificationType,
   Prisma,
   SpendLimitDuration,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { LedgerService } from '../ledger/ledger.service';
+import { FeesService } from '../ledger/fees.service';
+import { SettingsService } from '../settings/settings.service';
 import { CARD_PROVIDER, type CardProvider } from '../providers/card-provider.interface';
-import { CardOperationError, ForbiddenError, NotFoundError } from '../common/errors';
+import {
+  CardOperationError,
+  ForbiddenError,
+  InsufficientBalanceError,
+  NotFoundError,
+} from '../common/errors';
 import type { CreateCardInput, UpdateCardLimitsInput } from '@tenzopay/shared';
 
 /**
@@ -37,6 +45,8 @@ export class CardsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ledger: LedgerService,
+    private readonly fees: FeesService,
+    private readonly settings: SettingsService,
     @Inject(CARD_PROVIDER) private readonly provider: CardProvider,
   ) {}
 
@@ -54,13 +64,15 @@ export class CardsService {
       );
     }
 
-    // Guard against unbounded card creation per user.
+    // Guard against unbounded card creation per user. The ceiling is a setting
+    // so it can be raised for a customer without a deploy.
+    const maxCards = await this.settings.get('limits.max_cards_per_user');
     const activeCount = await this.prisma.card.count({
       where: { userId, status: { not: CardStatus.CLOSED } },
     });
-    if (activeCount >= 20) {
+    if (BigInt(activeCount) >= maxCards) {
       throw new CardOperationError(
-        'You have reached the maximum of 20 open cards. Close one to create another.',
+        `You have reached the maximum of ${maxCards} open cards. Close one to create another.`,
       );
     }
 
@@ -79,6 +91,34 @@ export class CardsService {
 
     // Stable per (user, name, limits) so a double-submit cannot issue two cards.
     const idempotencyKey = `card:${userId}:${this.hashInput(input)}`;
+
+    /**
+     * Charge before issuing, not after.
+     *
+     * Creating the card at the provider costs money and cannot be undone
+     * cheaply, so an account that cannot cover the fee is turned away first.
+     * The key is derived from the same input hash as the card itself, so a
+     * double-submit charges once.
+     */
+    const issuanceFee = await this.fees.cardIssuanceFee();
+    if (issuanceFee > 0n) {
+      try {
+        await this.ledger.chargeFee({
+          userId,
+          idempotencyKey: `fee:issuance:${idempotencyKey}`,
+          amount: issuanceFee,
+          feeType: FeeType.CARD_ISSUANCE,
+          description: `Card issuance fee — ${input.name}`,
+        });
+      } catch (err) {
+        if (err instanceof InsufficientBalanceError) {
+          throw new CardOperationError(
+            'Your balance does not cover the card issuance fee. Add money and try again.',
+          );
+        }
+        throw err;
+      }
+    }
 
     const providerCard = await this.provider.createVirtualCard({
       accountToken: holder.providerAccountToken ?? undefined,

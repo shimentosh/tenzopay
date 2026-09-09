@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import {
+  FeeType,
   LedgerAccountKind,
   LedgerDirection,
   LedgerTransactionType,
@@ -354,6 +355,12 @@ export class LedgerService {
     userId: string;
     depositId: string;
     amount: bigint;
+    /**
+     * Deducted from the deposit before it is credited, so the user is credited
+     * net. Taking it from the incoming money rather than from the existing
+     * balance means a deposit fee can never overdraw an account.
+     */
+    feeAmount?: bigint;
     currency?: string;
     metadata?: Prisma.InputJsonValue;
   }): Promise<string> {
@@ -375,22 +382,152 @@ export class LedgerService {
           tx,
         );
 
-        return this.post(
+        const fee = params.feeAmount ?? 0n;
+        if (fee < 0n || fee > params.amount) {
+          throw new Error('Deposit fee must be between zero and the deposit amount');
+        }
+
+        const entries: EntryInput[] = [
+          { accountId: clearing, direction: LedgerDirection.DEBIT, amount: params.amount, currency },
+          {
+            accountId: userAvailable,
+            direction: LedgerDirection.CREDIT,
+            amount: params.amount - fee,
+            currency,
+          },
+        ];
+
+        if (fee > 0n) {
+          const feeRevenue = await this.ensureAccount(
+            LedgerAccountKind.SYSTEM_FEE_REVENUE,
+            null,
+            currency,
+            tx,
+          );
+          entries.push({
+            accountId: feeRevenue,
+            direction: LedgerDirection.CREDIT,
+            amount: fee,
+            currency,
+          });
+        }
+
+        const ledgerTransactionId = await this.post(
           {
             type: LedgerTransactionType.DEPOSIT_CONFIRMED,
             idempotencyKey,
             description: 'USDT deposit confirmed',
             metadata: params.metadata,
-            entries: [
-              { accountId: clearing, direction: LedgerDirection.DEBIT, amount: params.amount, currency },
-              { accountId: userAvailable, direction: LedgerDirection.CREDIT, amount: params.amount, currency },
-            ],
+            entries,
           },
           tx,
         );
+
+        // Inside the same transaction on purpose: a fee must not be able to
+        // exist without its posting, nor a posting without its fee record.
+        if (fee > 0n) {
+          await tx.fee.create({
+            data: {
+              userId: params.userId,
+              type: FeeType.DEPOSIT,
+              amount: fee,
+              currency,
+              ledgerTransactionId,
+              description: 'Deposit fee',
+            },
+          });
+        }
+
+        return ledgerTransactionId;
       });
     } catch (err) {
       return this.resolveDuplicate(err, idempotencyKey);
+    }
+  }
+
+  /**
+   * Charge a fee straight from the available balance.
+   *
+   * Used where there is nothing to reserve the fee against — issuing a card,
+   * or a monthly plan charge. Runs at SERIALIZABLE for the same reason a hold
+   * does: the read of the balance and the write that spends it must not be
+   * separable, or two concurrent charges both pass and overdraw the account.
+   *
+   * Throws InsufficientBalanceError rather than letting a balance go negative.
+   * The caller decides what that means — card creation refuses; a scheduled
+   * plan charge would retry later.
+   */
+  async chargeFee(params: {
+    userId: string;
+    idempotencyKey: string;
+    amount: bigint;
+    feeType: FeeType;
+    description: string;
+    currency?: string;
+    metadata?: Prisma.InputJsonValue;
+  }): Promise<string> {
+    const currency = params.currency ?? 'USDT';
+    if (params.amount <= 0n) {
+      throw new Error('A fee charge must be positive');
+    }
+
+    try {
+      return await this.withSerializableRetry(
+        () =>
+          this.prisma.$transaction(
+            async (tx) => {
+              const existing = await tx.ledgerTransaction.findUnique({
+                where: { idempotencyKey: params.idempotencyKey },
+                select: { id: true },
+              });
+              if (existing) return existing.id;
+
+              const availableId = await this.ensureAccount(
+                LedgerAccountKind.USER_AVAILABLE, params.userId, currency, tx,
+              );
+              const feeRevenueId = await this.ensureAccount(
+                LedgerAccountKind.SYSTEM_FEE_REVENUE, null, currency, tx,
+              );
+
+              const available = await this.getAccountBalance(availableId, tx);
+              if (available < params.amount) {
+                throw new InsufficientBalanceError(available, params.amount);
+              }
+
+              const ledgerTransactionId = await this.post(
+                {
+                  type: LedgerTransactionType.FEE,
+                  idempotencyKey: params.idempotencyKey,
+                  description: params.description,
+                  metadata: params.metadata,
+                  entries: [
+                    { accountId: availableId, direction: LedgerDirection.DEBIT, amount: params.amount, currency },
+                    { accountId: feeRevenueId, direction: LedgerDirection.CREDIT, amount: params.amount, currency },
+                  ],
+                },
+                tx,
+              );
+
+              await tx.fee.create({
+                data: {
+                  userId: params.userId,
+                  type: params.feeType,
+                  amount: params.amount,
+                  currency,
+                  ledgerTransactionId,
+                  description: params.description,
+                },
+              });
+
+              return ledgerTransactionId;
+            },
+            { isolationLevel: Prisma.TransactionIsolationLevel.Serializable, timeout: 5_000 },
+          ),
+        `chargeFee(${params.idempotencyKey})`,
+      );
+    } catch (err) {
+      if (err instanceof InsufficientBalanceError) throw err;
+      return this.resolveDuplicate(err, params.idempotencyKey);
     }
   }
 
@@ -531,12 +668,20 @@ export class LedgerService {
     idempotencyKey: string;
     heldAmount: bigint;
     settledAmount: bigint;
+    /**
+     * The transaction fee, already reserved inside `heldAmount` when the
+     * authorization was approved. Collecting it here rather than charging it
+     * separately is what stops a fee overdrawing an account that has just
+     * spent its last unit.
+     */
+    feeAmount?: bigint;
     currency?: string;
     description?: string;
     metadata?: Prisma.InputJsonValue;
   }): Promise<string> {
     const currency = params.currency ?? 'USDT';
     const { heldAmount, settledAmount } = params;
+    const fee = params.feeAmount ?? 0n;
 
     try {
       return await this.prisma.$transaction(async (tx) => {
@@ -560,27 +705,40 @@ export class LedgerService {
         });
       }
 
-      // Over-capture: pull the excess from available as well.
-      if (settledAmount > heldAmount) {
+      if (fee > 0n) {
+        const feeRevenue = await this.ensureAccount(
+          LedgerAccountKind.SYSTEM_FEE_REVENUE, null, currency, tx,
+        );
+        entries.push({
+          accountId: feeRevenue, direction: LedgerDirection.CREDIT, amount: fee, currency,
+        });
+      }
+
+      /**
+       * Whatever the hold does not cover is settled from available; whatever
+       * it over-covers goes back. The fee is part of what the hold has to
+       * cover, so it sits on this side of the sum rather than being charged
+       * on its own.
+       */
+      const remainder = heldAmount - settledAmount - fee;
+
+      if (remainder < 0n) {
         entries.push({
           accountId: availableId,
           direction: LedgerDirection.DEBIT,
-          amount: settledAmount - heldAmount,
+          amount: -remainder,
           currency,
         });
-      }
-
-      // Under-capture: return the unused hold to available.
-      if (heldAmount > settledAmount) {
+      } else if (remainder > 0n) {
         entries.push({
           accountId: availableId,
           direction: LedgerDirection.CREDIT,
-          amount: heldAmount - settledAmount,
+          amount: remainder,
           currency,
         });
       }
 
-      return this.post(
+      const ledgerTransactionId = await this.post(
         {
           type: LedgerTransactionType.CARD_SETTLEMENT,
           idempotencyKey: params.idempotencyKey,
@@ -590,6 +748,21 @@ export class LedgerService {
         },
         tx,
       );
+
+      if (fee > 0n) {
+        await tx.fee.create({
+          data: {
+            userId: params.userId,
+            type: FeeType.FX,
+            amount: fee,
+            currency,
+            ledgerTransactionId,
+            description: params.description ?? 'Card transaction fee',
+          },
+        });
+      }
+
+      return ledgerTransactionId;
       });
     } catch (err) {
       return this.resolveDuplicate(err, params.idempotencyKey);

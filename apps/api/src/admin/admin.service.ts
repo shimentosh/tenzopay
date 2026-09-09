@@ -12,7 +12,7 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { LedgerService } from '../ledger/ledger.service';
-import { SettingsService } from './settings.service';
+import { SettingsService } from '../settings/settings.service';
 import { DepositsService } from '../deposits/deposits.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
 import { CARD_PROVIDER, type CardProvider } from '../providers/card-provider.interface';

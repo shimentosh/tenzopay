@@ -3,7 +3,7 @@ import { AdminRole } from '@prisma/client';
 import { z } from 'zod';
 import { adminAdjustmentSchema, type AdminAdjustmentInput } from '@tenzopay/shared';
 import { AdminService } from './admin.service';
-import { SettingsService } from './settings.service';
+import { SettingsService } from '../settings/settings.service';
 import { AdminGuard, CurrentAdmin, Roles, type RequestAdmin } from '../auth/guards';
 import { zodPipe } from '../common/zod-validation.pipe';
 

@@ -481,6 +481,10 @@ model CardTransaction {
   /// Minor units, USD cents
   amount           BigInt
   settledAmount    BigInt?
+  /// USDT minor units. Reserved inside the hold at authorization and collected
+  /// at settlement, so the rate in force when the card was tapped is the rate
+  /// charged even if settings change before the merchant captures.
+  feeAmount        BigInt                @default(0)
   currency         String                @default("USD")
   merchantName     String?
   merchantCategory String?

@@ -7,6 +7,7 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { LedgerService } from '../ledger/ledger.service';
+import { FeesService } from '../ledger/fees.service';
 import { InsufficientBalanceError } from '../common/errors';
 import { usdCentsToUsdt } from '@tenzopay/shared';
 
@@ -64,6 +65,7 @@ export class AsaService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ledger: LedgerService,
+    private readonly fees: FeesService,
   ) {}
 
   async decide(payload: AsaRequest): Promise<AsaResponse> {
@@ -152,7 +154,23 @@ export class AsaService {
       // Card amounts are USD cents; the ledger is USDT minor units. See
       // ARCHITECTURE §0: this 1:1 conversion stands in for a real FX quote
       // from an off-ramp provider, which this build does not have.
-      const holdAmount = usdCentsToUsdt(amountCents);
+      const spendAmount = usdCentsToUsdt(amountCents);
+
+      /**
+       * The fee is reserved inside the hold, not charged afterwards.
+       *
+       * If it were charged at settlement from whatever remains, a cardholder
+       * who spends their balance to the last unit would leave a fee that
+       * cannot be collected without pushing them negative — which the ledger
+       * integrity check would then flag, correctly. Reserving it here means
+       * the authorization is declined for the full cost or not at all, and
+       * the rate in force at the tap is the rate charged even if settings
+       * change before the merchant captures.
+       */
+      const merchantCurrency = payload.amounts?.merchant?.currency;
+      const isForeign = !!merchantCurrency && merchantCurrency.toUpperCase() !== 'USD';
+      const feeAmount = await this.fees.transactionFee(spendAmount, isForeign);
+      const holdAmount = spendAmount + feeAmount;
 
       try {
         const { availableAfter } = await this.ledger.placeHold({
@@ -166,10 +184,11 @@ export class AsaService {
             eventToken,
             merchant: payload.merchant?.descriptor ?? null,
             mcc: payload.merchant?.mcc ?? null,
+            feeAmount: feeAmount.toString(),
           },
         });
 
-        await this.upsertPendingTransaction(card, eventToken, amountCents, payload);
+        await this.upsertPendingTransaction(card, eventToken, amountCents, payload, feeAmount);
 
         return this.finish(eventToken, cardToken, card.userId, amountCents,
           AuthorizationDecision.APPROVED, null, availableAfter, started, payload);
@@ -263,6 +282,7 @@ export class AsaService {
     eventToken: string,
     amountCents: bigint,
     payload: AsaRequest,
+    feeAmount: bigint,
   ): Promise<void> {
     await this.prisma.cardTransaction
       .upsert({
@@ -273,6 +293,7 @@ export class AsaService {
           providerTransactionToken: eventToken,
           status: CardTransactionStatus.PENDING,
           amount: amountCents,
+          feeAmount,
           currency: payload.amounts?.cardholder?.currency ?? 'USD',
           merchantName: payload.merchant?.descriptor ?? null,
           mcc: payload.merchant?.mcc ?? null,

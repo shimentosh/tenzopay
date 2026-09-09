@@ -3,6 +3,8 @@ import { ConfigService } from '@nestjs/config';
 import { DepositStatus, WebhookProvider, WebhookStatus } from '@prisma/client';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { LedgerService } from '../src/ledger/ledger.service';
+import { FeesService } from '../src/ledger/fees.service';
+import { SettingsService } from '../src/settings/settings.service';
 import { DepositsService } from '../src/deposits/deposits.service';
 import { DepositAddressService } from '../src/deposits/deposit-address.service';
 import { MockBlockchainProvider } from '../src/providers/mock/mock-blockchain.provider';
@@ -42,9 +44,13 @@ describe('deposit pipeline', () => {
     prisma = new PrismaService();
     await prisma.$connect();
     ledger = new LedgerService(prisma);
+    // Fees read their rates from settings; with none stored, every rate is the
+    // registry default of zero, so these tests still assert gross crediting.
+    const settings = new SettingsService(prisma, configService);
+    const fees = new FeesService(settings);
     chain = new MockBlockchainProvider(configService);
     const addresses = new DepositAddressService(prisma, chain, configService);
-    deposits = new DepositsService(prisma, ledger, addresses, chain, configService);
+    deposits = new DepositsService(prisma, ledger, fees, addresses, chain, configService);
   });
 
   afterAll(async () => {

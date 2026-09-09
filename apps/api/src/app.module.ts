@@ -6,6 +6,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { buildConfig } from './config/configuration';
 import { PrismaModule } from './prisma/prisma.module';
 import { LedgerModule } from './ledger/ledger.module';
+import { SettingsModule } from './settings/settings.module';
 import { ProvidersModule } from './providers/providers.module';
 import { AuthModule } from './auth/auth.module';
 import { KycModule } from './kyc/kyc.module';
@@ -42,6 +43,7 @@ import { LoggingMiddleware } from './common/logging.middleware';
     ScheduleModule.forRoot(),
 
     PrismaModule,
+    SettingsModule,
     LedgerModule,
     ProvidersModule,
     AuthModule,

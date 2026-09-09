@@ -9,6 +9,7 @@ import {
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { LedgerService } from '../ledger/ledger.service';
+import { FeesService } from '../ledger/fees.service';
 import type { AppConfig } from '../config/configuration';
 import {
   BLOCKCHAIN_PROVIDER,
@@ -44,6 +45,7 @@ export class DepositsService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly ledger: LedgerService,
+    private readonly fees: FeesService,
     private readonly addresses: DepositAddressService,
     @Inject(BLOCKCHAIN_PROVIDER) private readonly chain: BlockchainProvider,
     configService: ConfigService<{ app: AppConfig }, true>,
@@ -257,15 +259,24 @@ export class DepositsService {
       return; // already credited
     }
 
+    /**
+     * The fee comes out of the deposit, so the user is credited net and the
+     * charge can never overdraw them. Rates are read here, at the moment of
+     * crediting, and the resulting amount is persisted with the posting.
+     */
+    const feeAmount = await this.fees.depositFee(deposit.amount);
+
     const ledgerTransactionId = await this.ledger.creditDeposit({
       userId: deposit.userId,
       depositId: deposit.id,
       amount: deposit.amount,
+      feeAmount,
       currency: deposit.currency,
       metadata: {
         txHash: deposit.txHash,
         network: deposit.network,
         source: deposit.source,
+        feeAmount: feeAmount.toString(),
       },
     });
 
