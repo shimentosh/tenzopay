@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev -p 7317",
+    "dev": "next dev -p 1333",
     "build": "next build",
-    "start": "next start -p 7317"
+    "start": "next start -p 1333"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.6",

@@ -18,7 +18,7 @@ const envSchema = z
   .object({
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     APP_ENV: z.enum(['development', 'sandbox', 'production']).default('development'),
-    API_PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+    API_PORT: z.coerce.number().int().min(1).max(65535).default(1222),
     /**
      * How many reverse proxies sit in front of the API.
      *
@@ -28,10 +28,10 @@ const envSchema = z
      * IP. Never trust X-Forwarded-For blindly — set the exact hop count.
      */
     TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),
-    API_URL: z.string().url().default('http://localhost:4000'),
-    WEB_URL: z.string().url().default('http://localhost:3000'),
-    ADMIN_URL: z.string().url().default('http://localhost:7317'),
-    CORS_ORIGINS: z.string().default('http://localhost:3000,http://localhost:7317'),
+    API_URL: z.string().url().default('http://localhost:1222'),
+    WEB_URL: z.string().url().default('http://localhost:1111'),
+    ADMIN_URL: z.string().url().default('http://localhost:1333'),
+    CORS_ORIGINS: z.string().default('http://localhost:1111,http://localhost:1333'),
 
     DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
 

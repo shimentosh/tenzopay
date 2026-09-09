@@ -33,13 +33,14 @@ npm install                       # workspaces: api, web, admin, shared
 
 npm run db:migrate                # create tables
 npm run db:seed                   # admin + demo user + demo data
+npm run admin:create -- --email x@y.z --password '…' --role SUPER_ADMIN
 
 npm run dev                       # all three apps together
-npm run dev:api                   # NestJS   :4000
-npm run dev:web                   # user app :3000
-npm run dev:admin                 # admin    :7317
+npm run dev:api                   # NestJS   :1222
+npm run dev:web                   # user app :1111
+npm run dev:admin                 # admin    :1333
 
-npm test                          # vitest — 156 tests
+npm test                          # vitest — 160 tests
 ```
 
 Tests boot the real Nest app over HTTP against a `tenzopay_test` database.
@@ -50,9 +51,9 @@ Vitest transforms with SWC, not esbuild, because NestJS DI needs
 
 | App | Port |
 |---|---|
-| API | 4000 |
-| Web (customers) | 3000 |
-| Admin (staff) | 7317 |
+| API | 1222 |
+| Web (customers) | 1111 |
+| Admin (staff) | 1333 |
 
 Admin is a **separate Next.js app with its own origin and its own cookie**
 (`tenzo_admin_access`). Do not merge it into the customer app — the isolation
@@ -143,9 +144,12 @@ Both front-ends use **shadcn/ui** (Radix base, Tailwind v4). Components live in
 than wrapping them.
 
 - The palette lives in `globals.css`, which points shadcn's semantic tokens
-  (`--primary`, `--muted`, `--border` …) at TenzoPay's indigo/ink scales. That
-  is why shadcn components look like this product and not like the default
-  slate theme.
+  (`--primary`, `--muted`, `--border` …) at the design system in
+  `apps/web/DESIGN.md`. **Read that file before touching customer UI.** The
+  short version: the page is white and cards are *tinted* (accent hue at 8%),
+  depth never comes from a shadow, emphasis never comes from colour, and there
+  is at most one accent-filled button per screen. Two font weights only, 400
+  and 600.
 - **Use semantic classes** (`text-foreground`, `text-muted-foreground`,
   `bg-card`, `border`) rather than raw palette classes. Raw `ink-*`/`brand-*`
   are reserved for the deliberately dark chrome: the card face, the auth panel,
@@ -159,10 +163,10 @@ than wrapping them.
   its `cn` import to `@/lib/utils`, and check it has not overwritten
   `button.tsx` or `lib/utils.ts` (the CLI does both).
 - **Dark mode is live.** Any new colour must come from a semantic token, or it
-  will look correct in one theme and broken in the other. Two traps: `bg-primary`
-  is *light* in dark mode, so pair it with `text-primary-foreground` and never
-  `text-white`; and `--color-brand-50` is near-white, so never use it for a
-  glow — use `var(--accent)`, which tracks the theme.
+  will look correct in one theme and broken in the other. The accent is
+  deliberately *identical* in both themes and is always paired with
+  `text-content-on-accent` — never `text-white`. Surfaces flip:
+  `--surface-raised` is a green tint on white and a white tint on near-black.
 
 ## Code layout
 

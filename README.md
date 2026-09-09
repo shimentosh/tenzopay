@@ -101,8 +101,27 @@ npm run db:seed
 npm run dev
 ```
 
-Then open **http://localhost:3000** (customers) and **http://localhost:7317**
+Then open **http://localhost:1111** (customers) and **http://localhost:1333**
 (staff).
+
+### Creating a console admin
+
+The console has no self-registration, so the first admin is created out of band:
+
+```bash
+npm run admin:create -- --email you@example.com --password 'your-password' --role SUPER_ADMIN
+# or, keeping the secret out of shell history and `ps`:
+echo 'your-password' | npm run admin:create -- --email you@example.com --password-stdin
+```
+
+Re-running rotates the password rather than failing, which is what you want
+when someone has lost access. Every run writes an audit entry.
+
+**Staff switcher.** If a customer account and a console account share an email,
+the customer portal shows a "Console" link in the header. It is a navigation
+hint only — the console is a separate origin with its own password and cookie,
+so the link confers no privilege. `rbac.spec` asserts it never appears for a
+non-staff account and never opens the console on its own.
 
 ### Seeded accounts
 
@@ -197,7 +216,7 @@ Four database constraints do the heavy lifting:
 npm test
 ```
 
-156 tests across ten suites. Integration tests boot the **real Nest
+160 tests across ten suites. Integration tests boot the **real Nest
 application** over HTTP against a real Postgres schema (`tenzopay_test`,
 created automatically) — the guarantees under test are database and guard
 behaviours, so a mock would assert nothing.

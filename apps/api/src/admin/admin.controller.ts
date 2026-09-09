@@ -9,7 +9,7 @@ import { AdminGuard, CurrentAdmin, Roles, type RequestAdmin } from '../auth/guar
 import { zodPipe } from '../common/zod-validation.pipe';
 
 /**
- * Admin API, consumed by the separate console app on :7317.
+ * Admin API, consumed by the separate console app on :1333.
  *
  * Every mutating route requires an explicit reason. Read routes are open to all
  * signed-in staff; write routes are gated by @Roles plus a second in-service

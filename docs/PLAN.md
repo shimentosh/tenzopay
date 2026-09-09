@@ -66,9 +66,9 @@ J:\tenzopay
 
 | App | Port | URL | Audience |
 |---|---|---|---|
-| API (NestJS) | **4000** | http://localhost:4000 | internal |
-| Web (user) | **3000** | http://localhost:3000 | customers |
-| **Admin** | **7317** | http://localhost:7317 | staff only |
+| API (NestJS) | **1222** | http://localhost:1222 | internal |
+| Web (user) | **1111** | http://localhost:1111 | customers |
+| **Admin** | **1333** | http://localhost:1333 | staff only |
 | Postgres | 5432 | — | — |
 
 **Why admin is a separate app, not a `/admin` route:** it gets its own origin,
@@ -124,7 +124,7 @@ passes.
 | 9 | **ASA** | real-time auth decisioning | over-balance auth is declined |
 | 10 | Transactions | webhook sync, unified feed | settle releases the hold |
 | 11 | Web UI | landing + dashboard | full user journey clickable |
-| 12 | Admin UI | console on :7317 | adjustment posts double entries |
+| 12 | Admin UI | console on :1333 | adjustment posts double entries |
 | 13 | Jobs | reconciliation, confirmations | missed webhook still credits |
 | 14 | Tests | ledger, dedup, RBAC, webhooks | `npm test` green |
 | 15 | Hardening + docs | RUNBOOK, checklist | fresh clone boots |
@@ -133,7 +133,7 @@ passes.
 
 ## 5. Feature specification
 
-### 5.1 User app (:3000)
+### 5.1 User app (:1111)
 
 **Marketing** — `/`, `/features`, `/cards`, `/how-it-works`, `/security`,
 `/pricing`, `/faq`.
@@ -161,7 +161,7 @@ detail drawer. Tables collapse to cards on mobile.
 
 **Settings** — `/settings` — profile, KYC status, sessions, password.
 
-### 5.2 Admin app (:7317)
+### 5.2 Admin app (:1333)
 
 `/` dashboard · `/users` · `/users/[id]` · `/kyc` · `/deposits` · `/cards` ·
 `/transactions` · `/ledger` · `/webhooks` · `/audit` · `/health`

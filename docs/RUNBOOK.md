@@ -26,7 +26,7 @@ Both webhooks and ASA need a public HTTPS URL:
 
 ```bash
 ngrok http 4000
-# https://<id>.ngrok.app  ->  http://localhost:4000
+# https://<id>.ngrok.app  ->  http://localhost:1222
 ```
 
 ### Event subscription (transactions, KYC, card updates)
