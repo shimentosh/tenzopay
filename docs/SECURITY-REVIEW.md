@@ -108,15 +108,17 @@ A password alone protects a balance and the card-reveal flow. TOTP at sign-in,
 and a step-up challenge before revealing card details, is the minimum a fintech
 is expected to carry.
 
-### 7. A re-org after crediting is never reversed — MEDIUM
+### 7. A re-org after crediting is never reversed — FIXED
 
-`advanceConfirmations` returns early once a deposit is `CONFIRMED`, so a
-transaction re-orged out *after* crediting leaves the balance intact. Twelve
-confirmations makes this unlikely on Ethereum mainnet, not impossible.
+`advanceConfirmations` returned early once a deposit was `CONFIRMED`, so a
+transaction re-orged out *after* crediting left the balance intact.
 
-The fix fits the existing architecture: keep watching credited deposits for a
-further N blocks, and if the transaction disappears, post a **compensating
-ledger entry**. Never edit the original — entries are immutable.
+Fixed by `watchDepositReorgs`, which keeps checking credited deposits for 24
+hours and posts a **compensating** transaction if the transaction leaves the
+chain — never an edit, because entries are immutable. The fee is reversed out
+of revenue with it. If the money has already been spent the balance goes
+negative and the integrity job escalates it, which is the correct outcome for
+what is effectively a chargeback against us. See docs/BACKGROUND-JOBS.md.
 
 ### 8. Dependency vulnerabilities — MEDIUM
 
@@ -142,7 +144,8 @@ makes address-poisoning easier to attempt.
 1. ~~Placeholder secrets~~, ~~proxy trust~~, ~~webhook gating~~, ~~derivation
    index~~ — done, they were the config-level ones that turn into "the account
    was drained".
-2. Account lockout (5) — small, needs a migration.
-3. Re-org compensation (7) — touches the ledger, so it needs tests first.
+2. ~~Re-org compensation (7)~~ — done, with tests covering the reversal and the
+   spent-balance case.
+3. Account lockout (5) — small, needs a migration.
 4. MFA (6) — a feature, plan it properly.
 5. `next@16` (8) — schedule with the breaking-change work.

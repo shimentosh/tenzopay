@@ -102,6 +102,49 @@ export class JobsService {
     });
   }
 
+  /**
+   * Release holds whose closing webhook never arrived.
+   *
+   * Runs hourly and looks back eight days — comfortably past any authorization
+   * lifetime, so anything still pending has genuinely been abandoned rather
+   * than being slow. Rare by design: if this releases anything, a webhook was
+   * lost and that is worth investigating, which is why it logs at error.
+   */
+  @Cron(CronExpression.EVERY_HOUR)
+  async sweepStaleAuthorizations(): Promise<void> {
+    await this.guard('stale-authorizations', async () => {
+      const result = await this.webhooks.sweepStaleAuthorizations();
+      if (result.released > 0 || result.resolved > 0) {
+        this.logger.warn(
+          `Stale authorization sweep: ${result.checked} checked, ${result.resolved} resolved ` +
+            `from the provider, ${result.released} released, ${result.unresolved} left alone`,
+        );
+      }
+    });
+  }
+
+  /**
+   * Watch credited deposits for a re-org.
+   *
+   * Confirmation tracking stops at CONFIRMED, so without this a transaction
+   * that leaves the chain after crediting would keep its balance. Every ten
+   * minutes over a 24-hour window is far deeper than the twelve-confirmation
+   * threshold that credited it.
+   */
+  @Cron(CronExpression.EVERY_10_MINUTES)
+  async watchDepositReorgs(): Promise<void> {
+    if (this.config.deposits.mode === 'demo') return;
+
+    await this.guard('deposit-reorg-watch', async () => {
+      const result = await this.deposits.watchCreditedForReorg();
+      if (result.reversed > 0) {
+        this.logger.error(
+          `Re-org watch reversed ${result.reversed} credited deposit(s) of ${result.checked} checked`,
+        );
+      }
+    });
+  }
+
   /** Retry transient webhook processing failures. */
   @Cron(CronExpression.EVERY_MINUTE)
   async retryWebhooks(): Promise<void> {

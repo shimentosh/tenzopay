@@ -190,6 +190,88 @@ export class DepositsService {
   // ------------------------------------------------------- Confirmations ----
 
   /**
+   * Keep watching a deposit after it has been credited.
+   *
+   * `advanceConfirmations` stops looking the moment a deposit is CONFIRMED, so
+   * a transaction re-orged out *after* crediting would leave the balance
+   * standing while the chain no longer agrees. Twelve confirmations makes that
+   * unlikely, not impossible, and "unlikely" is not a control.
+   *
+   * A vanished transaction is reversed with a compensating entry rather than
+   * an edit — the history should read "credited, then reversed", because that
+   * is what happened. The watch window is deliberately much deeper than the
+   * confirmation depth; beyond it, a re-org is no longer a credible risk.
+   */
+  async watchCreditedForReorg(windowHours = 24): Promise<{ checked: number; reversed: number }> {
+    if (this.config.deposits.mode === 'demo') return { checked: 0, reversed: 0 };
+
+    const since = new Date(Date.now() - windowHours * 60 * 60 * 1000);
+    const credited = await this.prisma.deposit.findMany({
+      where: {
+        status: DepositStatus.CONFIRMED,
+        source: DepositSource.ONCHAIN,
+        confirmedAt: { gte: since },
+        txHash: { not: null },
+      },
+      select: {
+        id: true,
+        userId: true,
+        amount: true,
+        txHash: true,
+        currency: true,
+        ledgerTransactionId: true,
+      },
+      take: 200,
+    });
+
+    let reversed = 0;
+
+    for (const deposit of credited) {
+      let confirmations: number | null;
+      try {
+        confirmations = await this.chain.getConfirmations(deposit.txHash as string);
+      } catch {
+        continue; // A node hiccup is not evidence of a re-org.
+      }
+
+      if (confirmations !== null) continue;
+
+      // The fee came out of the deposit, so it has to go back out of revenue.
+      const fee = deposit.ledgerTransactionId
+        ? await this.prisma.fee.findFirst({
+            where: { ledgerTransactionId: deposit.ledgerTransactionId },
+            select: { amount: true },
+          })
+        : null;
+
+      await this.ledger.reverseDeposit({
+        userId: deposit.userId,
+        depositId: deposit.id,
+        amount: deposit.amount,
+        feeAmount: fee?.amount ?? 0n,
+        currency: deposit.currency,
+        reason: 'transaction no longer on chain after crediting',
+      });
+
+      await this.prisma.deposit.update({
+        where: { id: deposit.id },
+        data: {
+          status: DepositStatus.ORPHANED,
+          failureReason: 'Re-orged out after crediting; balance reversed',
+        },
+      });
+
+      reversed += 1;
+      this.logger.error(
+        `Deposit ${deposit.id} was re-orged out AFTER crediting. ` +
+          `${deposit.amount} reversed for user ${deposit.userId} — this needs a human.`,
+      );
+    }
+
+    return { checked: credited.length, reversed };
+  }
+
+  /**
    * Advance a deposit's confirmation count and credit it once the required
    * depth is reached.
    *

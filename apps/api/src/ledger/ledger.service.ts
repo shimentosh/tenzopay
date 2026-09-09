@@ -446,6 +446,80 @@ export class LedgerService {
   }
 
   /**
+   * Reverse a credited deposit whose transaction left the chain.
+   *
+   * A re-org after crediting is rare at twelve confirmations but not
+   * impossible, and the money must come back out. This posts a *compensating*
+   * transaction rather than touching the original: entries are immutable, so
+   * the history reads "credited, then reversed", which is what actually
+   * happened.
+   *
+   * The balance may not cover it — the customer may already have spent it. The
+   * reversal posts regardless and the balance is allowed to go negative,
+   * because the alternative is a ledger that disagrees with the chain. The
+   * integrity job surfaces the negative balance as an alert for a human to
+   * chase, which is the correct escalation for what is effectively a
+   * chargeback against us.
+   */
+  async reverseDeposit(params: {
+    userId: string;
+    depositId: string;
+    amount: bigint;
+    feeAmount?: bigint;
+    currency?: string;
+    reason: string;
+  }): Promise<string> {
+    const currency = params.currency ?? 'USDT';
+    const fee = params.feeAmount ?? 0n;
+    const idempotencyKey = `deposit:${params.depositId}:reverse`;
+
+    try {
+      return await this.prisma.$transaction(async (tx) => {
+        const availableId = await this.ensureAccount(
+          LedgerAccountKind.USER_AVAILABLE, params.userId, currency, tx,
+        );
+        const clearingId = await this.ensureAccount(
+          LedgerAccountKind.SYSTEM_DEPOSIT_CLEARING, null, currency, tx,
+        );
+
+        // The mirror image of creditDeposit: the net comes back off the user,
+        // the fee comes back out of revenue, and clearing is made whole.
+        const entries: EntryInput[] = [
+          {
+            accountId: availableId,
+            direction: LedgerDirection.DEBIT,
+            amount: params.amount - fee,
+            currency,
+          },
+          { accountId: clearingId, direction: LedgerDirection.CREDIT, amount: params.amount, currency },
+        ];
+
+        if (fee > 0n) {
+          const feeRevenueId = await this.ensureAccount(
+            LedgerAccountKind.SYSTEM_FEE_REVENUE, null, currency, tx,
+          );
+          entries.push({
+            accountId: feeRevenueId, direction: LedgerDirection.DEBIT, amount: fee, currency,
+          });
+        }
+
+        return this.post(
+          {
+            type: LedgerTransactionType.DEPOSIT_REVERSED,
+            idempotencyKey,
+            description: `Deposit reversed — ${params.reason}`,
+            metadata: { depositId: params.depositId, reason: params.reason },
+            entries,
+          },
+          tx,
+        );
+      });
+    } catch (err) {
+      return this.resolveDuplicate(err, idempotencyKey);
+    }
+  }
+
+  /**
    * Charge a fee straight from the available balance.
    *
    * Used where there is nothing to reserve the fee against — issuing a card,

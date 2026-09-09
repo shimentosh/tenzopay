@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   CardStatus,
@@ -16,6 +16,7 @@ import { sha256Hex } from '../common/crypto.util';
 import { redact } from '../common/redact';
 import { fromTokenRawValue } from '@tenzopay/shared';
 import type { TokenTransfer, SupportedNetwork } from '../providers/blockchain-provider.interface';
+import { CARD_PROVIDER, type CardProvider } from '../providers/card-provider.interface';
 
 /**
  * Webhook intake and processing.
@@ -38,6 +39,7 @@ export class WebhooksService {
     private readonly ledger: LedgerService,
     private readonly kyc: KycService,
     private readonly deposits: DepositsService,
+    @Inject(CARD_PROVIDER) private readonly provider: CardProvider,
     configService: ConfigService<{ app: AppConfig }, true>,
   ) {
     this.config = configService.get('app', { infer: true });
@@ -174,6 +176,98 @@ export class WebhooksService {
    * The hold was placed by ASA keyed on the authorization event token. Here we
    * either convert it into a settlement or return it to available.
    */
+  /**
+   * Backstop for authorizations whose closing webhook never arrived.
+   *
+   * A hold is released when Lithic tells us the authorization expired, voided
+   * or settled. If that webhook is lost, the hold stays and the cardholder's
+   * money is stranded — indefinitely, because nothing else looks at it.
+   * Deposits already have a reconciliation sweep for exactly this reason;
+   * authorizations had none.
+   *
+   * The provider is asked rather than assumed. Releasing a hold for a
+   * transaction that later settles would debit a held balance that is already
+   * empty, so:
+   *
+   *   - provider reports a state -> apply it, the normal path handles the money
+   *   - provider has never heard of it, and it is older than any authorization
+   *     lifetime -> release, and say so loudly
+   *   - provider errors -> touch nothing and let the next pass try
+   */
+  async sweepStaleAuthorizations(olderThanHours = 192): Promise<{
+    checked: number;
+    resolved: number;
+    released: number;
+    unresolved: number;
+  }> {
+    const cutoff = new Date(Date.now() - olderThanHours * 60 * 60 * 1000);
+
+    const stale = await this.prisma.cardTransaction.findMany({
+      where: { status: CardTransactionStatus.PENDING, authorizedAt: { lt: cutoff } },
+      select: {
+        id: true,
+        providerTransactionToken: true,
+        userId: true,
+        amount: true,
+        feeAmount: true,
+        authorizedAt: true,
+        card: { select: { name: true } },
+      },
+      take: 200,
+    });
+
+    let resolved = 0;
+    let released = 0;
+    let unresolved = 0;
+
+    for (const row of stale) {
+      let providerState: Awaited<ReturnType<CardProvider['getTransaction']>>;
+      try {
+        providerState = await this.provider.getTransaction(row.providerTransactionToken);
+      } catch (err) {
+        unresolved += 1;
+        this.logger.warn(
+          `Stale authorization ${row.providerTransactionToken}: provider lookup failed ` +
+            `(${err instanceof Error ? err.message : 'unknown'}). Leaving the hold in place.`,
+        );
+        continue;
+      }
+
+      if (providerState) {
+        // The provider knows it. Route it through the same path a webhook takes
+        // so settlement, fees and idempotency all behave identically.
+        await this.syncCardTransaction(providerState as unknown as Record<string, unknown>);
+        resolved += 1;
+        continue;
+      }
+
+      // Unknown to the provider and long past any authorization lifetime.
+      const heldUsdt = row.amount * 10_000n + row.feeAmount;
+      await this.ledger.releaseHold({
+        userId: row.userId,
+        idempotencyKey: `release:stale:${row.providerTransactionToken}`,
+        amount: heldUsdt,
+        description:
+          `Stale authorization released — ${row.card?.name ?? 'card'} ` +
+          `(${row.providerTransactionToken})`,
+      });
+
+      await this.prisma.cardTransaction.update({
+        where: { id: row.id },
+        data: { status: CardTransactionStatus.EXPIRED, declineReason: 'stale_sweep' },
+      });
+
+      released += 1;
+      this.logger.error(
+        `Released a stale hold of ${heldUsdt} for ${row.providerTransactionToken}, ` +
+          `authorized ${row.authorizedAt?.toISOString()}. The closing webhook never arrived — ` +
+          'worth checking why.',
+      );
+    }
+
+    return { checked: stale.length, resolved, released, unresolved };
+  }
+
   private async syncCardTransaction(payload: Record<string, unknown>): Promise<void> {
     const transaction = (payload.transaction ?? payload) as Record<string, unknown>;
 

@@ -228,6 +228,72 @@ describe('fees', () => {
     expect(await balance(LedgerAccountKind.USER_HELD, userId)).toBe(0n);
   });
 
+  it('reverses a re-orged deposit, taking the fee back out of revenue too', async () => {
+    setRate('fee.deposit.bps', '200');
+    const gross = 1_000_000n;
+    const fee = await fees.depositFee(gross);
+
+    await ledger.creditDeposit({
+      userId,
+      depositId: '00000000-0000-4000-8000-0000000000d5',
+      amount: gross,
+      feeAmount: fee,
+    });
+
+    await ledger.reverseDeposit({
+      userId,
+      depositId: '00000000-0000-4000-8000-0000000000d5',
+      amount: gross,
+      feeAmount: fee,
+      reason: 'test re-org',
+    });
+
+    // Everything returns to where it started: the user keeps nothing, and the
+    // fee does not stay booked as revenue on money that never really arrived.
+    expect(await balance(LedgerAccountKind.USER_AVAILABLE, userId)).toBe(0n);
+    expect(await balance(LedgerAccountKind.SYSTEM_FEE_REVENUE, null)).toBe(0n);
+    expect(await balance(LedgerAccountKind.SYSTEM_DEPOSIT_CLEARING, null)).toBe(0n);
+  });
+
+  it('reverses even when the money has already been spent, and says so', async () => {
+    const gross = 100_000n;
+    await ledger.creditDeposit({
+      userId,
+      depositId: '00000000-0000-4000-8000-0000000000d6',
+      amount: gross,
+    });
+
+    // Spend it all, so the reversal has nothing to claw back from.
+    await ledger.placeHold({
+      userId,
+      idempotencyKey: 'auth:spent',
+      amount: gross,
+      description: 'spent it',
+    });
+    await ledger.settleAuthorization({
+      userId,
+      idempotencyKey: 'settle:spent',
+      heldAmount: gross,
+      settledAmount: gross,
+    });
+
+    await ledger.reverseDeposit({
+      userId,
+      depositId: '00000000-0000-4000-8000-0000000000d6',
+      amount: gross,
+      reason: 'test re-org after spending',
+    });
+
+    // The balance goes negative on purpose. A ledger that quietly disagreed
+    // with the chain would be worse, and the integrity job raises it for a
+    // human — this is effectively a chargeback against us.
+    expect(await balance(LedgerAccountKind.USER_AVAILABLE, userId)).toBe(-gross);
+
+    const integrity = await ledger.verifyIntegrity();
+    expect(integrity.unbalanced).toHaveLength(0);
+    expect(integrity.negativeBalances.length).toBeGreaterThan(0);
+  });
+
   it('leaves the ledger balanced and no balance negative', async () => {
     setRate('fee.deposit.bps', '250');
     await ledger.creditDeposit({
