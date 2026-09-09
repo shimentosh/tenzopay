@@ -24,6 +24,19 @@ async function bootstrap(): Promise<void> {
   const config = configService.get('app', { infer: true });
   const logger = new Logger('Bootstrap');
 
+  /**
+   * Resolve the real client IP.
+   *
+   * Rate limiting and every audit log entry key off `req.ip`. Behind a proxy
+   * with this unset, that is the proxy's address: one throttle bucket for all
+   * users (so a single attacker can lock everyone out) and useless audit
+   * trails. The hop count is explicit rather than `true`, because blanket
+   * trust lets a client forge X-Forwarded-For and bypass throttling entirely.
+   */
+  if (config.trustProxyHops > 0) {
+    app.set('trust proxy', config.trustProxyHops);
+  }
+
   app.setGlobalPrefix('api');
 
   /**

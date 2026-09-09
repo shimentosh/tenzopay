@@ -19,6 +19,15 @@ const envSchema = z
     NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
     APP_ENV: z.enum(['development', 'sandbox', 'production']).default('development'),
     API_PORT: z.coerce.number().int().min(1).max(65535).default(4000),
+    /**
+     * How many reverse proxies sit in front of the API.
+     *
+     * Express needs this to resolve the real client IP. Left at 0 (the safe
+     * default) `req.ip` behind a load balancer is the balancer's address, so
+     * every user shares one rate-limit bucket and audit logs record the wrong
+     * IP. Never trust X-Forwarded-For blindly — set the exact hop count.
+     */
+    TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(10).default(0),
     API_URL: z.string().url().default('http://localhost:4000'),
     WEB_URL: z.string().url().default('http://localhost:3000'),
     ADMIN_URL: z.string().url().default('http://localhost:7317'),
@@ -67,6 +76,61 @@ const envSchema = z
     SEED_DEMO_USER_PASSWORD: z.string().default('ChangeMe!2026'),
   })
   // --- Cross-field safety rules ------------------------------------------
+  /**
+   * Placeholder secrets must never reach production.
+   *
+   * `.env.example` ships `replace-me-with-a-long-random-string` (36 chars) and
+   * an all-zero ENCRYPTION_KEY (64 valid hex chars). Both satisfy the length
+   * and format rules above, so without this check a copied example file boots
+   * a production API signing tokens with a key published in a public repo.
+   */
+  .superRefine((c, ctx) => {
+    if (c.APP_ENV !== 'production') return;
+
+    const placeholder = /replace[-_ ]?me|changeme|example|placeholder|secret{2,}|^test/i;
+    const secrets: [string, string][] = [
+      ['JWT_ACCESS_SECRET', c.JWT_ACCESS_SECRET],
+      ['JWT_REFRESH_SECRET', c.JWT_REFRESH_SECRET],
+    ];
+
+    for (const [name, value] of secrets) {
+      if (placeholder.test(value)) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [name],
+          message: `${name} still holds a placeholder value. Generate one with \`openssl rand -base64 48\`.`,
+        });
+      }
+      // A key made of one repeated character carries no entropy regardless of length.
+      if (new Set(value).size < 12) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: [name],
+          message: `${name} has too little entropy (fewer than 12 distinct characters).`,
+        });
+      }
+    }
+
+    if (c.JWT_ACCESS_SECRET === c.JWT_REFRESH_SECRET) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['JWT_REFRESH_SECRET'],
+        message:
+          'JWT_REFRESH_SECRET must differ from JWT_ACCESS_SECRET, or a stolen access ' +
+          'token can be replayed as a refresh token.',
+      });
+    }
+
+    if (/^0+$/.test(c.ENCRYPTION_KEY) || new Set(c.ENCRYPTION_KEY).size < 8) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['ENCRYPTION_KEY'],
+        message:
+          'ENCRYPTION_KEY is the .env.example placeholder or otherwise low entropy. ' +
+          'Generate one with `openssl rand -hex 32`.',
+      });
+    }
+  })
   .refine((c) => c.CARD_PROVIDER !== 'lithic' || !!c.LITHIC_API_KEY, {
     message: 'LITHIC_API_KEY is required when CARD_PROVIDER=lithic',
     path: ['LITHIC_API_KEY'],
@@ -133,6 +197,7 @@ export function buildConfig(raw: NodeJS.ProcessEnv = process.env) {
   return {
     nodeEnv: c.NODE_ENV,
     appEnv: c.APP_ENV,
+    trustProxyHops: c.TRUST_PROXY_HOPS,
     isProduction: c.APP_ENV === 'production',
     port: c.API_PORT,
     apiUrl: c.API_URL,

@@ -59,10 +59,23 @@ export class DepositAddressService {
     });
     if (existing) return existing;
 
-    // Derivation index is allocated from the address count for this network.
-    // The unique constraint on (network, derivationIndex) rejects a collision,
-    // so a concurrent create cannot silently reuse an index.
-    const index = await this.prisma.depositAddress.count({ where: { network } });
+    /**
+     * Allocate the next derivation index as MAX + 1, never COUNT.
+     *
+     * COUNT reuses an index the moment any row for this network is removed,
+     * which would hand a second user an address a previous user may still be
+     * sending to — their funds would credit the wrong account. MAX only ever
+     * moves forward, so an index is never issued twice even after a delete.
+     *
+     * The unique constraint on (network, derivationIndex) remains the backstop
+     * for the concurrent case: the loser of a race fails the insert rather
+     * than silently sharing an address.
+     */
+    const highest = await this.prisma.depositAddress.aggregate({
+      where: { network },
+      _max: { derivationIndex: true },
+    });
+    const index = (highest._max.derivationIndex ?? -1) + 1;
     const { address, isDemo } = this.deriveAddress(index);
 
     try {

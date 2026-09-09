@@ -80,11 +80,13 @@ export class WebhooksController {
         this.logger.error(`ASA signature verification failed: ${result.reason}`);
         throw new WebhookVerificationError('lithic-asa', result.reason);
       }
-    } else if (this.config.isProduction) {
-      // Never run unauthenticated authorization decisioning in production.
+    } else if (this.config.appEnv !== 'development') {
+      // Fail closed everywhere but a developer's own machine. A sandbox box
+      // pointed at real webhooks with the secret unset would otherwise accept
+      // forged authorization decisions.
       throw new WebhookVerificationError('lithic-asa', 'no_secret_configured');
     } else {
-      this.logger.warn('ASA running without signature verification (dev only)');
+      this.logger.warn('ASA running without signature verification (local development only)');
     }
 
     return this.asa.decide(req.body as AsaRequest);
@@ -116,7 +118,7 @@ export class WebhooksController {
         this.logger.error(`Lithic webhook verification failed: ${result.reason}`);
         throw new WebhookVerificationError('lithic', result.reason);
       }
-    } else if (this.config.isProduction) {
+    } else if (this.config.appEnv !== 'development') {
       throw new WebhookVerificationError('lithic', 'no_secret_configured');
     }
 
@@ -158,7 +160,9 @@ export class WebhooksController {
         this.logger.error(`Alchemy webhook verification failed: ${result.reason}`);
         throw new WebhookVerificationError('alchemy', result.reason);
       }
-    } else if (this.config.isProduction) {
+    } else if (this.config.appEnv !== 'development') {
+      // A forged deposit webhook credits real balance. Fail closed outside
+      // local development.
       throw new WebhookVerificationError('alchemy', 'no_signing_key_configured');
     }
 
