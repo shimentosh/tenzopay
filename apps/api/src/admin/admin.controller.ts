@@ -41,6 +41,18 @@ export class AdminController {
     return this.admin.health();
   }
 
+  /**
+   * Fee revenue and the volume that drives provider cost.
+   *
+   * Read-only, but finance data all the same: gated to ADMIN and FINANCE
+   * rather than every signed-in staff member.
+   */
+  @Get('revenue')
+  @Roles(AdminRole.ADMIN, AdminRole.FINANCE)
+  async revenue(@Query('days') days?: string) {
+    return this.admin.revenue({ days: days ? Number(days) : undefined });
+  }
+
   // --------------------------------------------------------------- Users ----
 
   @Get('users')

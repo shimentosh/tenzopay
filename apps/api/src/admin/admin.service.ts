@@ -5,6 +5,7 @@ import {
   CardStatus,
   CardTransactionStatus,
   DepositStatus,
+  LedgerAccountKind,
   Prisma,
   UserStatus,
   WebhookStatus,
@@ -583,6 +584,127 @@ export class AdminService {
       data: page,
       nextCursor: hasMore ? page[page.length - 1].id : null,
       hasMore,
+    };
+  }
+
+  // ------------------------------------------------------------ Revenue ----
+
+  /**
+   * Fee revenue, and the volume that drives provider cost.
+   *
+   * Revenue is read two ways on purpose. The lifetime figure is the balance of
+   * the SYSTEM_FEE_REVENUE ledger account — the authoritative number, because
+   * it is derived from balanced postings. The windowed figures come from the
+   * `fees` table, which is what can be broken down by type and by day. If the
+   * two ever disagree for the same period, a fee was recorded without a
+   * matching posting and that is a bug worth finding.
+   *
+   * Cost is NOT reported. Nothing in this system records what a card issuance
+   * or an RPC call actually costs us — those are provider invoices that live
+   * outside the ledger. What is returned instead is the volume that generates
+   * them, so a unit price can be applied once someone enters one.
+   */
+  async revenue(params: { days?: number } = {}) {
+    const days = Math.min(Math.max(params.days ?? 30, 1), 365);
+    const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
+
+    const feeAccountId = await this.ledger.ensureAccount(
+      LedgerAccountKind.SYSTEM_FEE_REVENUE,
+      null,
+    );
+
+    const [
+      lifetime,
+      byType,
+      windowTotal,
+      recent,
+      series,
+      cardsIssued,
+      transactionsSettled,
+      depositsConfirmed,
+      webhooksReceived,
+    ] = await Promise.all([
+      this.ledger.getAccountBalance(feeAccountId),
+      this.prisma.fee.groupBy({
+        by: ['type'],
+        where: { createdAt: { gte: since } },
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
+      this.prisma.fee.aggregate({
+        where: { createdAt: { gte: since } },
+        _sum: { amount: true },
+        _count: { _all: true },
+      }),
+      this.prisma.fee.findMany({
+        where: { createdAt: { gte: since } },
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        select: {
+          id: true,
+          type: true,
+          amount: true,
+          currency: true,
+          description: true,
+          createdAt: true,
+          ledgerTransactionId: true,
+        },
+      }),
+      // Bucketed in SQL rather than in memory: the console must not pull every
+      // fee row into Node to draw a 30-point line.
+      this.prisma.$queryRaw<{ day: Date; amount: bigint | null }[]>`
+        SELECT date_trunc('day', "createdAt") AS day, SUM(amount) AS amount
+        FROM fees
+        WHERE "createdAt" >= ${since}
+        GROUP BY 1
+        ORDER BY 1 ASC
+      `,
+      this.prisma.card.count({ where: { createdAt: { gte: since } } }),
+      this.prisma.cardTransaction.count({
+        where: { status: CardTransactionStatus.SETTLED, createdAt: { gte: since } },
+      }),
+      this.prisma.deposit.count({
+        where: { status: DepositStatus.CONFIRMED, createdAt: { gte: since } },
+      }),
+      this.prisma.webhookEvent.count({ where: { receivedAt: { gte: since } } }),
+    ]);
+
+    const windowAmount = windowTotal._sum.amount ?? 0n;
+
+    return {
+      days,
+      currency: 'USDT',
+      lifetime: lifetime.toString(),
+      window: {
+        total: windowAmount.toString(),
+        count: windowTotal._count._all,
+      },
+      byType: byType
+        .map((row) => ({
+          type: row.type,
+          amount: (row._sum.amount ?? 0n).toString(),
+          count: row._count._all,
+        }))
+        .sort((a, b) => (BigInt(b.amount) > BigInt(a.amount) ? 1 : -1)),
+      series: series.map((row) => ({
+        date: row.day.toISOString().slice(0, 10),
+        amount: (row.amount ?? 0n).toString(),
+      })),
+      recent: recent.map((fee) => ({
+        ...fee,
+        amount: fee.amount.toString(),
+        createdAt: fee.createdAt.toISOString(),
+      })),
+      /**
+       * What we get billed for. Unit prices are not in this system, so these
+       * are counts rather than money — deliberately not guessed at.
+       */
+      costDrivers: {
+        cardsIssued,
+        transactionsSettled,
+        depositsConfirmed,
+        webhooksReceived,
+      },
     };
   }
 
