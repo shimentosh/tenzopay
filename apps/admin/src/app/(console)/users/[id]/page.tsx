@@ -16,6 +16,7 @@ import {
   Panel,
   PanelHeader,
   Skeleton,
+  Badge,
   StatusBadge,
 } from '@/components/ui/primitives';
 import { formatDateTime, money, truncateHash, usd } from '@/lib/utils';
@@ -29,6 +30,8 @@ interface UserDetail {
     phoneNumber: string | null;
     status: string;
     kycStatus: string;
+    plan: 'STARTER' | 'TEAM' | 'BUSINESS';
+    planDunningSince: string | null;
     emailVerifiedAt: string | null;
     lastLoginAt: string | null;
     createdAt: string;
@@ -68,6 +71,18 @@ export default function UserDetailPage() {
   const { data, isLoading } = useQuery({
     queryKey: ['admin-user', params.id],
     queryFn: () => api.get<UserDetail>(`/admin/users/${params.id}`),
+  });
+
+  const planMutation = useMutation({
+    mutationFn: (input: { plan: string; reason: string }) =>
+      api.post(`/admin/users/${params.id}/plan`, input),
+    onSuccess: () => {
+      toast.success('Plan updated. It is billed from the next monthly pass.');
+      void queryClient.invalidateQueries({ queryKey: ['admin-user', params.id] });
+    },
+    onError: (error: unknown) => {
+      toast.error(error instanceof Error ? error.message : 'We could not change the plan.');
+    },
   });
 
   const statusMutation = useMutation({
@@ -122,8 +137,40 @@ export default function UserDetailPage() {
           <div className="mt-2.5 flex flex-wrap gap-2">
             <StatusBadge status={user.status} />
             <StatusBadge status={user.kycStatus} />
+            <Badge tone={user.plan === 'STARTER' ? 'neutral' : 'brand'}>
+              {user.plan} plan
+            </Badge>
+            {user.planDunningSince ? (
+              <Badge tone="warning">Plan fee unpaid</Badge>
+            ) : null}
           </div>
         </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          {(['STARTER', 'TEAM', 'BUSINESS'] as const)
+            .filter((plan) => plan !== user.plan)
+            .map((plan) => (
+              <Button
+                key={plan}
+                variant="secondary"
+                size="sm"
+                loading={planMutation.isPending}
+                onClick={() => {
+                  const reason = window.prompt(
+                    `Reason for moving this account to ${plan} (min 10 characters):`,
+                  );
+                  if (!reason || reason.trim().length < 10) {
+                    if (reason !== null) {
+                      toast.error('A reason of at least 10 characters is required.');
+                    }
+                    return;
+                  }
+                  planMutation.mutate({ plan, reason: reason.trim() });
+                }}
+              >
+                Move to {plan.toLowerCase()}
+              </Button>
+            ))}
 
         <Button
           variant={frozen ? 'secondary' : 'destructiveOutline'}
@@ -159,6 +206,7 @@ export default function UserDetailPage() {
             </>
           )}
         </Button>
+        </div>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-3">

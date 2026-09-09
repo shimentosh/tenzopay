@@ -189,6 +189,8 @@ export class AdminService {
         lastName: true,
         phoneNumber: true,
         status: true,
+        plan: true,
+        planDunningSince: true,
         emailVerifiedAt: true,
         lastLoginAt: true,
         createdAt: true,
