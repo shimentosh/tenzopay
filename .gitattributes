@@ -1,0 +1,18 @@
+# Normalise line endings. Everything is stored LF in the repository; Git
+# checks files out with the platform's native endings. Without this, working
+# on Windows makes every commit warn about LF -> CRLF conversion.
+* text=auto eol=lf
+
+# Generated, and noisy in diffs.
+package-lock.json linguist-generated=true -diff
+
+# Binary: never touch these.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
