@@ -35,7 +35,7 @@ export default function AdminTransactionsPage() {
       key: 'card',
       header: 'Card',
       render: (row) => (
-        <p className="font-medium text-foreground">
+        <p className="font-semibold text-foreground">
           {row.name} <span className="font-normal text-muted-foreground">•••• {row.lastFour}</span>
         </p>
       ),
@@ -44,7 +44,7 @@ export default function AdminTransactionsPage() {
       key: 'holder',
       header: 'Cardholder',
       render: (row) => (
-        <Link href={`/users/${row.userId}`} className="text-sm text-primary hover:underline">
+        <Link href={`/users/${row.userId}`} className="text-ui text-primary hover:underline">
           {row.userEmail}
         </Link>
       ),

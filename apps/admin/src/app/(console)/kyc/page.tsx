@@ -47,8 +47,8 @@ export default function KycPage() {
       header: 'Applicant',
       render: (row) => (
         <div className="min-w-0">
-          <p className="truncate font-medium text-foreground">{row.name ?? '—'}</p>
-          <p className="truncate text-xs text-muted-foreground">{row.email}</p>
+          <p className="truncate font-semibold text-foreground">{row.name ?? '—'}</p>
+          <p className="truncate text-caption text-muted-foreground">{row.email}</p>
         </div>
       ),
     },
@@ -72,7 +72,7 @@ export default function KycPage() {
       <div
         role="tablist"
         aria-label="Filter by verification status"
-        className="flex flex-wrap gap-1 rounded-lg border bg-card p-1"
+        className="flex flex-wrap gap-1 rounded-card border bg-card p-1"
       >
         {filters.map((filter) => (
           <button
@@ -82,7 +82,7 @@ export default function KycPage() {
             aria-selected={kycFilter === filter.value}
             onClick={() => setKycFilter(filter.value)}
             className={cn(
-              'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+              'rounded-md px-3 py-1.5 text-caption font-semibold transition-colors',
               kycFilter === filter.value
                 ? 'bg-foreground text-background'
                 : 'text-muted-foreground hover:text-foreground',

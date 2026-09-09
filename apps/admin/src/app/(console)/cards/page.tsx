@@ -62,7 +62,7 @@ export default function AdminCardsPage() {
       header: 'Card',
       render: (row) => (
         <div className="min-w-0">
-          <p className="truncate font-medium text-foreground">
+          <p className="truncate font-semibold text-foreground">
             {row.name}{' '}
             {/* Last four only — full PAN is never exposed to staff. */}
             <span className="font-normal text-muted-foreground">•••• {row.lastFour}</span>
@@ -77,7 +77,7 @@ export default function AdminCardsPage() {
       key: 'holder',
       header: 'Cardholder',
       render: (row) => (
-        <Link href={`/users/${row.userId}`} className="text-sm text-primary hover:underline">
+        <Link href={`/users/${row.userId}`} className="text-ui text-primary hover:underline">
           {row.userEmail}
         </Link>
       ),
@@ -89,7 +89,7 @@ export default function AdminCardsPage() {
       secondary: true,
       numeric: true,
       render: (row) => (
-        <span className="text-xs text-muted-foreground">
+        <span className="text-caption text-muted-foreground">
           {row.dailyLimit ? `${usd(row.dailyLimit)}/d` : '—'}
           {row.monthlyLimit ? ` · ${usd(row.monthlyLimit)}/m` : ''}
         </span>
@@ -107,7 +107,7 @@ export default function AdminCardsPage() {
       header: 'Synced',
       secondary: true,
       render: (row) => (
-        <span className="text-xs text-muted-foreground">
+        <span className="text-caption text-muted-foreground">
           {row.lastSyncedAt ? formatDate(row.lastSyncedAt) : 'Never'}
         </span>
       ),

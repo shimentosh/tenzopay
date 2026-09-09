@@ -60,7 +60,7 @@ export default function WebhooksPage() {
       header: 'Event',
       render: (row) => (
         <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-foreground">{row.eventType}</p>
+          <p className="truncate text-ui font-semibold text-foreground">{row.eventType}</p>
           <p className="truncate font-mono text-[11px] text-muted-foreground">{row.eventId}</p>
         </div>
       ),
@@ -69,7 +69,7 @@ export default function WebhooksPage() {
       key: 'provider',
       header: 'Provider',
       render: (row) => (
-        <span className="text-xs font-medium text-muted-foreground">{row.provider}</span>
+        <span className="text-caption font-semibold text-muted-foreground">{row.provider}</span>
       ),
     },
     { key: 'status', header: 'Status', render: (row) => <StatusBadge status={row.status} /> },
@@ -86,7 +86,7 @@ export default function WebhooksPage() {
       secondary: true,
       render: (row) =>
         row.error ? (
-          <span className="line-clamp-1 max-w-xs text-xs text-destructive" title={row.error}>
+          <span className="line-clamp-1 max-w-xs text-caption text-destructive" title={row.error}>
             {row.error}
           </span>
         ) : (
@@ -98,7 +98,7 @@ export default function WebhooksPage() {
       header: 'Received',
       secondary: true,
       render: (row) => (
-        <span className="text-xs text-muted-foreground">{formatDateTime(row.receivedAt)}</span>
+        <span className="text-caption text-muted-foreground">{formatDateTime(row.receivedAt)}</span>
       ),
     },
     {

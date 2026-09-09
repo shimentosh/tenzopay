@@ -37,7 +37,7 @@ export default function HealthPage() {
     return (
       <div className="mx-auto max-w-3xl space-y-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-20 rounded-2xl" />
+          <Skeleton key={i} className="h-20 rounded-card" />
         ))}
       </div>
     );
@@ -85,11 +85,11 @@ export default function HealthPage() {
           {Object.entries(data?.webhookQueue ?? {}).length ? (
             Object.entries(data!.webhookQueue).map(([status, count]) => (
               <div key={status} className="flex items-center justify-between px-5 py-3">
-                <dt className="text-sm text-muted-foreground">
+                <dt className="text-ui text-muted-foreground">
                   {status.replace(/_/g, ' ').toLowerCase()}
                 </dt>
                 <dd
-                  className={`tnum text-sm font-semibold ${
+                  className={`tnum text-ui font-semibold ${
                     status === 'DEAD_LETTER' && count > 0
                       ? 'text-destructive'
                       : 'text-foreground'
@@ -100,14 +100,14 @@ export default function HealthPage() {
               </div>
             ))
           ) : (
-            <p className="px-5 py-6 text-center text-sm text-muted-foreground">
+            <p className="px-5 py-6 text-center text-ui text-muted-foreground">
               No webhook events recorded.
             </p>
           )}
         </dl>
       </Panel>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-caption text-muted-foreground">
         Last checked {formatDateTime(data?.checkedAt)}
       </p>
     </div>
@@ -133,11 +133,11 @@ function Check({
         <XCircle className="size-5 shrink-0 text-destructive" aria-hidden />
       )}
       <div className="min-w-0 flex-1">
-        <p className="text-sm font-medium text-foreground">{label}</p>
-        <p className="truncate text-xs text-muted-foreground">{error ?? detail}</p>
+        <p className="text-ui font-semibold text-foreground">{label}</p>
+        <p className="truncate text-caption text-muted-foreground">{error ?? detail}</p>
       </div>
       <span
-        className={`text-xs font-semibold ${ok ? 'text-positive' : 'text-destructive'}`}
+        className={`text-caption font-semibold ${ok ? 'text-positive' : 'text-destructive'}`}
       >
         {ok ? 'Healthy' : 'Down'}
       </span>

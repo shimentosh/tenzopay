@@ -70,7 +70,7 @@ export default function DepositsPage() {
       render: (row) => (
         <Link
           href={`/users/${row.userId}`}
-          className="text-sm text-primary hover:underline"
+          className="text-ui text-primary hover:underline"
         >
           {row.userEmail}
         </Link>
@@ -81,7 +81,7 @@ export default function DepositsPage() {
       header: 'Amount',
       numeric: true,
       render: (row) => (
-        <span className="font-medium text-foreground">
+        <span className="font-semibold text-foreground">
           {money(row.amount)} {row.currency}
           {row.source === 'DEMO' ? (
             <Badge className="ml-2">Demo</Badge>
@@ -112,7 +112,7 @@ export default function DepositsPage() {
         // yet not yet posted to the ledger.
         <span
           className={cn(
-            'text-xs font-medium',
+            'text-caption font-semibold',
             row.credited ? 'text-positive' : 'text-muted-foreground',
           )}
         >

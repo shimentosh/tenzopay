@@ -100,8 +100,8 @@ export default function WalletsPage() {
       header: 'Customer',
       render: (row) => (
         <Link href={`/users/${row.userId}`} className="min-w-0 block">
-          <p className="truncate font-medium text-foreground">{row.name ?? '—'}</p>
-          <p className="truncate text-xs text-primary">{row.email}</p>
+          <p className="truncate font-semibold text-foreground">{row.name ?? '—'}</p>
+          <p className="truncate text-caption text-primary">{row.email}</p>
         </Link>
       ),
     },
@@ -110,7 +110,7 @@ export default function WalletsPage() {
       header: 'Available',
       numeric: true,
       render: (row) => (
-        <span className="font-medium text-foreground">
+        <span className="font-semibold text-foreground">
           {money(row.available)} USDT
         </span>
       ),
@@ -180,13 +180,13 @@ function Total({
 }) {
   return (
     <Panel className="p-5">
-      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-caption text-muted-foreground">{label}</p>
       {loading ? (
         <Skeleton className="mt-2 h-7 w-28" />
       ) : (
-        <p className="tnum mt-1.5 text-2xl font-semibold text-foreground">
+        <p className="tnum mt-1.5 text-title font-semibold text-foreground">
           {money(value)}
-          <span className="ml-1.5 text-sm font-medium text-muted-foreground">USDT</span>
+          <span className="ml-1.5 text-ui font-semibold text-muted-foreground">USDT</span>
         </p>
       )}
     </Panel>

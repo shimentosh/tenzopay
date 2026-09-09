@@ -206,7 +206,7 @@ export default function ConsoleSettingsPage() {
                   key={row.role}
                   className={row.role === admin?.role ? 'bg-accent/40' : undefined}
                 >
-                  <TableCell className="font-medium">
+                  <TableCell className="font-semibold">
                     {row.role.replace(/_/g, ' ')}
                   </TableCell>
                   <Cell allowed={row.viewAll} />
@@ -234,8 +234,8 @@ export default function ConsoleSettingsPage() {
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 px-5 py-3">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-sm font-medium text-foreground">{value}</dd>
+      <dt className="text-ui text-muted-foreground">{label}</dt>
+      <dd className="text-ui font-semibold text-foreground">{value}</dd>
     </div>
   );
 }

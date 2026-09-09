@@ -42,15 +42,15 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-sm">
         <div className="mb-8 flex flex-col items-center text-center">
           <Logo inverted showWordmark={false} />
-          <h1 className="mt-4 text-xl font-semibold text-white">
+          <h1 className="mt-4 text-subtitle font-semibold text-white">
             Operations Console
           </h1>
-          <p className="mt-1 text-sm text-white/50">
+          <p className="mt-1 text-ui text-white/50">
             Staff access only. All actions are recorded.
           </p>
         </div>
 
-        <main id="main" className="rounded-2xl bg-card p-6 shadow-xl">
+        <main id="main" className="rounded-panel bg-card p-6">
           {error ? (
             <Alert tone="critical" className="mb-4">
               {error}
@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
             </Button>
           </form>
 
-          <p className="mt-5 flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
+          <p className="mt-5 flex items-start gap-2 text-caption leading-relaxed text-muted-foreground">
             <ShieldCheck className="mt-px size-3.5 shrink-0 text-positive" aria-hidden />
             This console runs on its own origin and session, separate from the
             customer application.

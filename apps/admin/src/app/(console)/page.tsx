@@ -33,7 +33,7 @@ export default function ConsoleDashboard() {
     return (
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 8 }).map((_, i) => (
-          <Skeleton key={i} className="h-24 rounded-2xl" />
+          <Skeleton key={i} className="h-24 rounded-card" />
         ))}
       </div>
     );
@@ -42,10 +42,10 @@ export default function ConsoleDashboard() {
   return (
     <div className="mx-auto max-w-6xl space-y-6">
       <div>
-        <h1 className="text-xl font-semibold tracking-tight text-foreground">
+        <h1 className="text-subtitle font-semibold tracking-tight text-foreground">
           Operations overview
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 text-ui text-muted-foreground">
           Platform health and volumes across all accounts.
         </p>
       </div>
@@ -53,7 +53,7 @@ export default function ConsoleDashboard() {
       {/* Ledger integrity is the single most important signal here: if the
           double-entry invariant breaks, nothing else on this page matters. */}
       {data?.integrity.ok ? (
-        <div className="flex items-center gap-2.5 rounded-xl border border-positive/25 bg-positive-soft px-4 py-3 text-sm text-foreground">
+        <div className="flex items-center gap-2.5 rounded-card bg-surface-raised px-4 py-3 text-ui text-content-primary">
           <CheckCircle2 className="size-4 text-positive" aria-hidden />
           Ledger integrity verified across {data.integrity.checkedTransactions}{' '}
           transactions — every entry balances.
@@ -118,12 +118,12 @@ export default function ConsoleDashboard() {
                   }
                   aria-hidden
                 />
-                <p className="text-sm text-foreground/80">{alert.message}</p>
+                <p className="text-ui text-foreground/80">{alert.message}</p>
               </li>
             ))}
           </ul>
         ) : (
-          <p className="px-5 py-8 text-center text-sm text-muted-foreground">
+          <p className="px-5 py-8 text-center text-ui text-muted-foreground">
             No active alerts.
           </p>
         )}
@@ -153,20 +153,20 @@ function Stat({
 }) {
   return (
     <Panel className="p-5">
-      <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+      <p className="text-caption font-semibold text-muted-foreground">
         {label}
       </p>
       <p
-        className={`tnum mt-1.5 text-2xl font-semibold ${
+        className={`tnum mt-1.5 text-title font-semibold ${
           tone === 'warning' ? 'text-warning' : 'text-foreground'
         }`}
       >
         {value}
         {suffix ? (
-          <span className="ml-1.5 text-sm font-medium text-muted-foreground">{suffix}</span>
+          <span className="ml-1.5 text-ui font-semibold text-muted-foreground">{suffix}</span>
         ) : null}
       </p>
-      {hint ? <p className="mt-0.5 text-xs text-muted-foreground">{hint}</p> : null}
+      {hint ? <p className="mt-0.5 text-caption text-muted-foreground">{hint}</p> : null}
     </Panel>
   );
 }
@@ -175,7 +175,7 @@ function QuickLink({ href, label }: { href: string; label: string }) {
   return (
     <Link
       href={href}
-      className="card-surface px-5 py-4 text-sm font-medium text-foreground transition-colors hover:border-primary/40 hover:text-primary"
+      className="card-surface px-5 py-4 text-ui font-semibold text-foreground transition-colors hover:border-primary/40 hover:text-primary"
     >
       {label} →
     </Link>

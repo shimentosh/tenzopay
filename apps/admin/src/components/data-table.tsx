@@ -130,7 +130,7 @@ export function StatusFilter({
     <div
       role="tablist"
       aria-label="Filter by status"
-      className="flex flex-wrap gap-1 rounded-lg border bg-card p-1"
+      className="flex flex-wrap gap-1 rounded-card border bg-card p-1"
     >
       {options.map((option) => {
         const selected = value === option;
@@ -142,7 +142,7 @@ export function StatusFilter({
             aria-selected={selected}
             onClick={() => onChange(option)}
             className={cn(
-              'rounded-md px-3 py-1.5 text-xs font-medium transition-colors',
+              'rounded-md px-3 py-1.5 text-caption font-semibold transition-colors',
               selected
                 ? 'bg-foreground text-background'
                 : 'text-muted-foreground hover:text-foreground',

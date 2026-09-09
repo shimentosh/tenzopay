@@ -87,7 +87,7 @@ export default function UserDetailPage() {
     return (
       <div className="mx-auto max-w-5xl space-y-4">
         <Skeleton className="h-6 w-32" />
-        <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="h-40 rounded-card" />
       </div>
     );
   }
@@ -107,7 +107,7 @@ export default function UserDetailPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <Link
         href="/users"
-        className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-1.5 text-ui text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" aria-hidden />
         All users
@@ -115,10 +115,10 @@ export default function UserDetailPage() {
 
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold tracking-tight text-foreground">
+          <h1 className="text-subtitle font-semibold tracking-tight text-foreground">
             {[user.firstName, user.lastName].filter(Boolean).join(' ') || user.email}
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">{user.email}</p>
+          <p className="mt-1 text-ui text-muted-foreground">{user.email}</p>
           <div className="mt-2.5 flex flex-wrap gap-2">
             <StatusBadge status={user.status} />
             <StatusBadge status={user.kycStatus} />
@@ -163,21 +163,21 @@ export default function UserDetailPage() {
 
       <div className="grid gap-4 sm:grid-cols-3">
         <Panel className="p-5">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Available</p>
-          <p className="tnum mt-1.5 text-xl font-semibold text-foreground">
-            {money(balance.available)} <span className="text-sm text-muted-foreground">USDT</span>
+          <p className="text-caption text-muted-foreground">Available</p>
+          <p className="tnum mt-1.5 text-subtitle font-semibold text-foreground">
+            {money(balance.available)} <span className="text-ui text-muted-foreground">USDT</span>
           </p>
         </Panel>
         <Panel className="p-5">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Held</p>
-          <p className="tnum mt-1.5 text-xl font-semibold text-foreground">
-            {money(balance.held)} <span className="text-sm text-muted-foreground">USDT</span>
+          <p className="text-caption text-muted-foreground">Held</p>
+          <p className="tnum mt-1.5 text-subtitle font-semibold text-foreground">
+            {money(balance.held)} <span className="text-ui text-muted-foreground">USDT</span>
           </p>
         </Panel>
         <Panel className="p-5">
-          <p className="text-xs uppercase tracking-wider text-muted-foreground">Total</p>
-          <p className="tnum mt-1.5 text-xl font-semibold text-foreground">
-            {money(balance.total)} <span className="text-sm text-muted-foreground">USDT</span>
+          <p className="text-caption text-muted-foreground">Total</p>
+          <p className="tnum mt-1.5 text-subtitle font-semibold text-foreground">
+            {money(balance.total)} <span className="text-ui text-muted-foreground">USDT</span>
           </p>
         </Panel>
       </div>
@@ -201,7 +201,7 @@ export default function UserDetailPage() {
             {data.cards.map((card) => (
               <li key={card.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">
+                  <p className="truncate text-ui font-semibold text-foreground">
                     {card.name}{' '}
                     <span className="font-normal text-muted-foreground">•••• {card.lastFour}</span>
                   </p>
@@ -211,7 +211,7 @@ export default function UserDetailPage() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <span className="tnum hidden text-xs text-muted-foreground sm:block">
+                  <span className="tnum hidden text-caption text-muted-foreground sm:block">
                     {card.dailyLimit ? `${usd(card.dailyLimit)}/day` : '—'}
                   </span>
                   <StatusBadge status={card.status} />
@@ -231,7 +231,7 @@ export default function UserDetailPage() {
             {data.deposits.map((deposit) => (
               <li key={deposit.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0">
-                  <p className="tnum text-sm font-medium text-foreground">
+                  <p className="tnum text-ui font-semibold text-foreground">
                     {money(deposit.amount)} USDT
                   </p>
                   <p className="truncate font-mono text-[11px] text-muted-foreground">
@@ -239,7 +239,7 @@ export default function UserDetailPage() {
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <span className="hidden text-xs text-muted-foreground sm:block">
+                  <span className="hidden text-caption text-muted-foreground sm:block">
                     {formatDateTime(deposit.createdAt)}
                   </span>
                   <StatusBadge status={deposit.status} />
@@ -259,16 +259,16 @@ export default function UserDetailPage() {
             {data.recentTransactions.map((tx) => (
               <li key={tx.id} className="flex items-center justify-between gap-4 px-5 py-3.5">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-medium text-foreground">
+                  <p className="truncate text-ui font-semibold text-foreground">
                     {tx.merchantName ?? 'Card transaction'}
                   </p>
-                  <p className="truncate text-xs text-muted-foreground">
+                  <p className="truncate text-caption text-muted-foreground">
                     {tx.card ? `${tx.card.name} •••• ${tx.card.lastFour} · ` : ''}
                     {formatDateTime(tx.createdAt)}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-3">
-                  <span className="tnum text-sm font-medium text-foreground">
+                  <span className="tnum text-ui font-semibold text-foreground">
                     {usd(tx.amount)}
                   </span>
                   <StatusBadge status={tx.status} />
@@ -373,8 +373,8 @@ function LedgerAdjustment({ userId }: { userId: string }) {
 function Row({ label, value }: { label: string; value: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between gap-4 px-5 py-3">
-      <dt className="text-sm text-muted-foreground">{label}</dt>
-      <dd className="text-sm font-medium text-foreground">{value}</dd>
+      <dt className="text-ui text-muted-foreground">{label}</dt>
+      <dd className="text-ui font-semibold text-foreground">{value}</dd>
     </div>
   );
 }

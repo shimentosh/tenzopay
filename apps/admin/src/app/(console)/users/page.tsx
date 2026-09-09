@@ -38,8 +38,8 @@ export default function UsersPage() {
       header: 'User',
       render: (row) => (
         <div className="min-w-0">
-          <p className="truncate font-medium text-foreground">{row.name ?? '—'}</p>
-          <p className="truncate text-xs text-muted-foreground">{row.email}</p>
+          <p className="truncate font-semibold text-foreground">{row.name ?? '—'}</p>
+          <p className="truncate text-caption text-muted-foreground">{row.email}</p>
         </div>
       ),
     },

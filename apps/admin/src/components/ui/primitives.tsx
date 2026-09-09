@@ -30,7 +30,7 @@ export function Panel({
   return (
     <Card
       className={cn(
-        'gap-0 rounded-[var(--radius-panel)] border-border py-0 shadow-[var(--shadow-subtle)]',
+        'gap-0 rounded-panel py-0',
         className,
       )}
       {...props}
@@ -52,14 +52,14 @@ export function PanelHeader({
   return (
     <div
       className={cn(
-        'flex flex-wrap items-start justify-between gap-3 border-b px-5 py-4',
+        'flex flex-wrap items-start justify-between gap-3 px-6 pt-6 pb-4',
         className,
       )}
     >
       <div className="min-w-0">
-        <h2 className="text-[15px] font-semibold text-foreground">{title}</h2>
+        <h2 className="text-subtitle font-semibold text-content-primary">{title}</h2>
         {description ? (
-          <p className="mt-0.5 text-sm text-muted-foreground">{description}</p>
+          <p className="mt-1 text-ui text-content-tertiary">{description}</p>
         ) : null}
       </div>
       {action}
@@ -72,14 +72,11 @@ export function PanelHeader({
 type Tone = 'neutral' | 'positive' | 'warning' | 'critical' | 'brand';
 
 const toneClass: Record<Tone, string> = {
-  neutral: 'bg-muted text-muted-foreground border-transparent',
-  positive:
-    'border-transparent bg-positive-soft text-[color-mix(in_oklch,var(--color-positive),black_18%)]',
-  warning:
-    'border-transparent bg-warning-soft text-[color-mix(in_oklch,var(--color-warning),black_28%)]',
-  critical:
-    'border-transparent bg-critical-soft text-[color-mix(in_oklch,var(--color-critical),black_10%)]',
-  brand: 'border-transparent bg-accent text-accent-foreground',
+  neutral: 'bg-surface-raised text-content-secondary',
+  positive: 'bg-surface-raised text-positive',
+  warning: 'bg-surface-raised text-warning',
+  critical: 'bg-surface-raised text-negative',
+  brand: 'bg-surface-raised text-content-primary',
 };
 
 export function Badge({
@@ -92,7 +89,7 @@ export function Badge({
   return (
     <ShadcnBadge
       variant="outline"
-      className={cn('gap-1.5 rounded-full px-2.5 py-1', toneClass[tone], className)}
+      className={cn('gap-1.5 rounded-pill border-transparent px-2.5 py-1 text-caption font-semibold', toneClass[tone], className)}
       {...props}
     >
       {dot ? <span className="size-1.5 rounded-full bg-current" aria-hidden /> : null}
@@ -153,7 +150,7 @@ export function Input({
   return (
     <ShadcnInput
       aria-invalid={invalid || undefined}
-      className={cn('h-10 bg-card', className)}
+      className={cn(className)}
       {...props}
     />
   );
@@ -177,17 +174,17 @@ export function Field({
   const describedBy = error ? `${htmlFor}-error` : hint ? `${htmlFor}-hint` : undefined;
 
   return (
-    <div className={cn('space-y-1.5', className)}>
+    <div className={cn('space-y-2', className)}>
       <Label htmlFor={htmlFor}>{label}</Label>
       {/* aria-describedby is wired here so every field announces its own error
           without each caller remembering to do it. */}
       <div aria-describedby={describedBy}>{children}</div>
       {error ? (
-        <p id={`${htmlFor}-error`} role="alert" className="text-xs text-destructive">
+        <p id={`${htmlFor}-error`} role="alert" className="text-caption text-negative">
           {error}
         </p>
       ) : hint ? (
-        <p id={`${htmlFor}-hint`} className="text-xs text-muted-foreground">
+        <p id={`${htmlFor}-hint`} className="text-caption text-content-tertiary">
           {hint}
         </p>
       ) : null}
@@ -211,13 +208,13 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center px-6 py-14 text-center">
       {icon ? (
-        <div className="mb-3 flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+        <div className="mb-3 flex size-12 items-center justify-center rounded-full bg-surface-raised text-content-tertiary">
           {icon}
         </div>
       ) : null}
-      <p className="text-sm font-medium text-foreground">{title}</p>
+      <p className="text-value font-semibold text-content-primary">{title}</p>
       {description ? (
-        <p className="mt-1 max-w-sm text-sm text-muted-foreground">{description}</p>
+        <p className="mt-1.5 max-w-sm text-ui text-content-tertiary">{description}</p>
       ) : null}
       {action ? <div className="mt-4">{action}</div> : null}
     </div>
@@ -236,18 +233,18 @@ export function Alert({
   className?: string;
 }) {
   const tones = {
-    warning: 'border-warning/25 bg-warning-soft text-foreground',
-    critical: 'border-destructive/25 bg-critical-soft text-foreground',
-    brand: 'border-accent-foreground/15 bg-accent text-foreground',
+    warning: 'text-warning',
+    critical: 'text-negative',
+    brand: 'text-content-primary',
   };
 
   return (
     <ShadcnAlert
       role={tone === 'critical' ? 'alert' : 'note'}
-      className={cn('rounded-xl', tones[tone], className)}
+      className={cn('rounded-card bg-surface-raised px-4 py-3.5', tones[tone], className)}
     >
-      {title ? <AlertTitle className="font-semibold">{title}</AlertTitle> : null}
-      <AlertDescription className="text-foreground/80 [&_p]:leading-relaxed">
+      {title ? <AlertTitle className="font-semibold text-content-primary">{title}</AlertTitle> : null}
+      <AlertDescription className="text-content-secondary [&_p]:leading-relaxed">
         {children}
       </AlertDescription>
     </ShadcnAlert>

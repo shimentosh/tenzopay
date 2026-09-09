@@ -29,7 +29,7 @@ export default function AuditPage() {
       key: 'action',
       header: 'Action',
       render: (row) => (
-        <span className="text-sm font-medium text-foreground">
+        <span className="text-ui font-semibold text-foreground">
           {row.action.replace(/_/g, ' ').toLowerCase()}
         </span>
       ),
@@ -39,7 +39,7 @@ export default function AuditPage() {
       header: 'Actor',
       render: (row) => (
         <div className="min-w-0">
-          <p className="truncate text-sm text-foreground">
+          <p className="truncate text-ui text-foreground">
             {row.adminUser?.email ?? row.actorType}
           </p>
           {row.adminUser ? (
@@ -65,7 +65,7 @@ export default function AuditPage() {
       key: 'reason',
       header: 'Reason',
       render: (row) => (
-        <span className="line-clamp-2 max-w-sm text-xs text-muted-foreground">
+        <span className="line-clamp-2 max-w-sm text-caption text-muted-foreground">
           {row.reason ?? '—'}
         </span>
       ),
@@ -85,7 +85,7 @@ export default function AuditPage() {
       header: 'When',
       secondary: true,
       render: (row) => (
-        <span className="text-xs text-muted-foreground">{formatDateTime(row.createdAt)}</span>
+        <span className="text-caption text-muted-foreground">{formatDateTime(row.createdAt)}</span>
       ),
     },
   ];

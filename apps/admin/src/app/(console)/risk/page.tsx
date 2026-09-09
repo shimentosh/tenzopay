@@ -35,8 +35,8 @@ export default function RiskPage() {
   if (isLoading) {
     return (
       <div className="mx-auto max-w-4xl space-y-4">
-        <Skeleton className="h-24 rounded-2xl" />
-        <Skeleton className="h-48 rounded-2xl" />
+        <Skeleton className="h-24 rounded-card" />
+        <Skeleton className="h-48 rounded-card" />
       </div>
     );
   }
@@ -75,7 +75,7 @@ export default function RiskPage() {
                   }
                   aria-hidden
                 />
-                <p className="text-sm text-foreground/80">{alert.message}</p>
+                <p className="text-ui text-foreground/80">{alert.message}</p>
                 <Badge tone={alert.level === 'error' ? 'critical' : 'warning'} className="ml-auto">
                   {alert.level}
                 </Badge>
@@ -96,7 +96,7 @@ export default function RiskPage() {
           title="Controls in force"
           description="What actually stops a transaction today."
         />
-        <ul className="divide-y divide-border text-sm">
+        <ul className="divide-y divide-border text-ui">
           <Control
             title="Shared-balance authorization"
             body="Every authorization is checked against the cardholder's available balance before approval, so multiple cards cannot exceed one balance."
@@ -117,12 +117,12 @@ export default function RiskPage() {
         </ul>
       </Panel>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-caption text-muted-foreground">
         Ledger integrity:{' '}
         {data?.integrity.ok ? (
-          <span className="font-medium text-positive">verified</span>
+          <span className="font-semibold text-positive">verified</span>
         ) : (
-          <Link href="/health" className="font-medium text-destructive underline">
+          <Link href="/health" className="font-semibold text-destructive underline">
             failing — investigate
           </Link>
         )}
@@ -142,9 +142,9 @@ function Metric({
 }) {
   return (
     <Panel className="p-5">
-      <p className="text-xs uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className="text-caption text-muted-foreground">{label}</p>
       <p
-        className={`tnum mt-1.5 text-2xl font-semibold ${
+        className={`tnum mt-1.5 text-title font-semibold ${
           tone === 'warning' ? 'text-warning' : 'text-foreground'
         }`}
       >
@@ -165,10 +165,10 @@ function Control({
 }) {
   return (
     <li className="px-5 py-3.5">
-      <p className={`font-medium ${missing ? 'text-muted-foreground' : 'text-foreground'}`}>
+      <p className={`font-semibold ${missing ? 'text-muted-foreground' : 'text-foreground'}`}>
         {title}
       </p>
-      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{body}</p>
+      <p className="mt-0.5 text-caption leading-relaxed text-muted-foreground">{body}</p>
     </li>
   );
 }

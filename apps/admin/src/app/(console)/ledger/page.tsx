@@ -61,7 +61,7 @@ export default function LedgerPage() {
                 <li key={tx.id} className="px-5 py-4">
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-foreground">
+                      <p className="text-ui font-semibold text-foreground">
                         {tx.description ?? tx.type.replace(/_/g, ' ').toLowerCase()}
                       </p>
                       <p className="truncate font-mono text-[11px] text-muted-foreground">
@@ -72,13 +72,13 @@ export default function LedgerPage() {
                       <Badge tone={net === 0n ? 'positive' : 'critical'}>
                         {net === 0n ? 'Balanced' : `Net ${net.toString()}`}
                       </Badge>
-                      <span className="text-xs text-muted-foreground">
+                      <span className="text-caption text-muted-foreground">
                         {formatDateTime(tx.createdAt)}
                       </span>
                     </div>
                   </div>
 
-                  <table className="mt-3 w-full text-xs">
+                  <table className="mt-3 w-full text-caption">
                     <tbody>
                       {tx.entries.map((entry, index) => (
                         <tr key={index} className="text-muted-foreground">
@@ -86,8 +86,8 @@ export default function LedgerPage() {
                             <span
                               className={
                                 entry.direction === 'CREDIT'
-                                  ? 'font-medium text-positive'
-                                  : 'font-medium text-foreground/80'
+                                  ? 'font-semibold text-positive'
+                                  : 'font-semibold text-foreground/80'
                               }
                             >
                               {entry.direction === 'CREDIT' ? 'CR' : 'DR'}
@@ -101,7 +101,7 @@ export default function LedgerPage() {
                               </span>
                             ) : null}
                           </td>
-                          <td className="tnum py-1 text-right font-medium text-foreground">
+                          <td className="tnum py-1 text-right font-semibold text-foreground">
                             {money(entry.amount, entry.currency)} {entry.currency}
                           </td>
                         </tr>
