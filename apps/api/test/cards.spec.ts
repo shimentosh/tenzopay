@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import request from 'supertest';
 import type { INestApplication } from '@nestjs/common';
 import type { Server } from 'node:http';
@@ -180,6 +180,66 @@ describe('cards', () => {
 
       expect(response.body.code).toBe('VALIDATION_ERROR');
       expect(await prisma.card.count()).toBe(0);
+    });
+  });
+
+  describe('plan limits', () => {
+    beforeEach(async () => {
+      await completeKyc();
+    });
+
+    afterEach(async () => {
+      await prisma.setting.deleteMany();
+    });
+
+    it('stops a Starter account at its plan ceiling', async () => {
+      await prisma.setting.create({ data: { key: 'limits.cards.starter', value: '1' } });
+
+      const first = await request(server)
+        .post('/api/cards')
+        .set('Cookie', cookie)
+        .send({ ...validCard, name: 'First' });
+      expect(first.status).toBe(201);
+
+      const second = await request(server)
+        .post('/api/cards')
+        .set('Cookie', cookie)
+        .send({ ...validCard, name: 'Second' });
+
+      expect(second.status).toBe(400);
+      expect(second.body.message).toMatch(/plan allows 1 open cards/i);
+    });
+
+    it('lets the same account through once it is on a larger plan', async () => {
+      await prisma.setting.create({ data: { key: 'limits.cards.starter', value: '1' } });
+      await prisma.setting.create({ data: { key: 'limits.cards.team', value: '5' } });
+
+      await request(server)
+        .post('/api/cards')
+        .set('Cookie', cookie)
+        .send({ ...validCard, name: 'First' });
+
+      await prisma.user.update({ where: { id: userId }, data: { plan: 'TEAM' } });
+
+      const second = await request(server)
+        .post('/api/cards')
+        .set('Cookie', cookie)
+        .send({ ...validCard, name: 'Second' });
+
+      expect(second.status).toBe(201);
+    });
+
+    it('treats zero as no limit, which is how Business is sold', async () => {
+      await prisma.setting.create({ data: { key: 'limits.cards.business', value: '0' } });
+      await prisma.user.update({ where: { id: userId }, data: { plan: 'BUSINESS' } });
+
+      for (const name of ['One', 'Two', 'Three']) {
+        const response = await request(server)
+          .post('/api/cards')
+          .set('Cookie', cookie)
+          .send({ ...validCard, name });
+        expect(response.status).toBe(201);
+      }
     });
   });
 

@@ -93,6 +93,10 @@ describe('ASA decisioning', () => {
       amount: options.balanceUsdt,
     });
 
+    // These suites hold more cards than the Starter plan allows, which is the
+    // point: the concurrency being tested is many cards against one balance.
+    await prisma.user.update({ where: { id: userId }, data: { plan: 'BUSINESS' } });
+
     cardTokens = [];
     for (let i = 0; i < options.cards; i++) {
       const created = await request(server)

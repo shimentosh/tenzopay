@@ -197,12 +197,31 @@ export const SETTINGS: SettingDefinition[] = [
 
   // ---- Operational thresholds. ----
   {
-    key: 'limits.max_cards_per_user',
-    label: 'Maximum cards per user',
-    description: 'Open cards one account may hold at once.',
+    key: 'limits.cards.starter',
+    label: 'Open cards on Starter',
+    description: 'How many cards a free account may hold at once.',
+    type: 'integer',
+    group: 'limits',
+    default: '3',
+    roles: ['ADMIN'] as AdminRole[],
+  },
+  {
+    key: 'limits.cards.team',
+    label: 'Open cards on Team',
+    description: 'How many cards a Team account may hold at once.',
     type: 'integer',
     group: 'limits',
     default: '20',
+    roles: ['ADMIN'] as AdminRole[],
+  },
+  {
+    key: 'limits.cards.business',
+    label: 'Open cards on Business',
+    description:
+      'Zero means no limit, matching the "custom limits" the Business plan is sold on.',
+    type: 'integer',
+    group: 'limits',
+    default: '0',
     roles: ['ADMIN'] as AdminRole[],
   },
 ];

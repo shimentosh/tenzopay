@@ -89,13 +89,20 @@ idempotency key is what prevents a second charge, not the schedule.
 Staff move an account between plans with `POST /admin/users/:id/plan`, which
 demands a reason and writes both an admin action and an audit log.
 
-### 2. Account lockout expiry — blocked on the lockout itself
+### 2. Per-plan card limits — BUILT
+
+Starter allows 3 open cards, Team 20, Business is uncapped — matching what the
+plans are sold on. Zero means no limit, the same convention the fee caps use.
+Previously one global ceiling applied to everyone, so a paying Team account got
+exactly what a free one did.
+
+### 3. Account lockout expiry — blocked on the lockout itself
 
 Recorded as finding 5 in SECURITY-REVIEW.md. Once `failedLoginAttempts` and
 `lockedUntil` exist, a job clears expired locks. Not worth building the sweep
 before the thing it sweeps.
 
-### 3. Provider health alerting — MEDIUM
+### 4. Provider health alerting — MEDIUM
 
 `AdminService.health()` reports on the card provider, the chain provider and
 the queue, but only when a human opens the page. Nothing watches it. A job that
@@ -105,20 +112,20 @@ more than one interval would catch an outage before customers report it.
 Needs an alert channel first — there is no email or Slack transport in this
 build, so today it could only log.
 
-### 4. Card expiry notices — LOW
+### 5. Card expiry notices — LOW
 
 Cards carry `expMonth`/`expYear` and nothing warns anyone. A monthly job that
 notifies holders 60 and 14 days out would prevent a subscription failing
 silently on a card the customer forgot about.
 
-### 5. Retention — LOW
+### 6. Retention — LOW
 
 Notifications and processed webhook events grow without bound. A pruning job
 should keep, say, 90 days of each.
 
 **Audit logs and ledger entries must never be pruned.** They are the record.
 
-### 6. KYC status polling — CONDITIONAL
+### 7. KYC status polling — CONDITIONAL
 
 Only needed if the provider can change a holder's status without sending a
 webhook. Worth confirming against Lithic's sandbox before writing anything.

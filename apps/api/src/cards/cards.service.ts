@@ -8,6 +8,7 @@ import {
   NotificationType,
   Prisma,
   SpendLimitDuration,
+  UserPlan,
 } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { LedgerService } from '../ledger/ledger.service';
@@ -50,6 +51,23 @@ export class CardsService {
     @Inject(CARD_PROVIDER) private readonly provider: CardProvider,
   ) {}
 
+  /** Open-card ceiling for this account's plan. Zero means no limit. */
+  private async cardLimitFor(userId: string): Promise<bigint> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { plan: true },
+    });
+
+    const key =
+      user?.plan === UserPlan.TEAM
+        ? 'limits.cards.team'
+        : user?.plan === UserPlan.BUSINESS
+          ? 'limits.cards.business'
+          : 'limits.cards.starter';
+
+    return this.settings.get(key);
+  }
+
   // -------------------------------------------------------------- Create ----
 
   async create(userId: string, input: CreateCardInput) {
@@ -64,15 +82,18 @@ export class CardsService {
       );
     }
 
-    // Guard against unbounded card creation per user. The ceiling is a setting
-    // so it can be raised for a customer without a deploy.
-    const maxCards = await this.settings.get('limits.max_cards_per_user');
+    /**
+     * The ceiling is per plan, which is what the plans are actually sold on:
+     * Starter allows a few cards, Team allows many, Business is uncapped. Zero
+     * means no limit, the same convention the fee caps use.
+     */
+    const maxCards = await this.cardLimitFor(userId);
     const activeCount = await this.prisma.card.count({
       where: { userId, status: { not: CardStatus.CLOSED } },
     });
-    if (BigInt(activeCount) >= maxCards) {
+    if (maxCards > 0n && BigInt(activeCount) >= maxCards) {
       throw new CardOperationError(
-        `You have reached the maximum of ${maxCards} open cards. Close one to create another.`,
+        `Your plan allows ${maxCards} open cards. Close one, or move to a larger plan.`,
       );
     }
 
