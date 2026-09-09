@@ -18,6 +18,14 @@ const config: Config = {
         bright: '#9FE870',
         brightDeep: '#8BDA57',
         forest: '#163300',
+        // The deliberately dark chrome — footer, card faces, code window,
+        // phone frame — is drawn on `ink`. Seven components referenced it
+        // before it existed here, and a missing colour emits no rule at all:
+        // the footer rendered transparent, so its own `text-paper/60` copy sat
+        // white-on-white and the whole footer looked like blank page. Same
+        // near-black as `--color-ink-950` in globals.css, which is what the
+        // signed-in app uses for its dark chrome.
+        ink: '#0A0A08',
         moss: '#454B45',
         mint: '#D3F4C5',
         paper: '#FFFFFF',

@@ -80,7 +80,7 @@ export function Footer() {
           <nav aria-label="Footer" className="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:grid-cols-5">
             {columns.map((column) => (
               <div key={column.title}>
-                <p className="text-micro font-medium uppercase text-paper/40">{column.title}</p>
+                <p className="text-micro font-medium uppercase text-paper/55">{column.title}</p>
                 <ul className="mt-5 space-y-3">
                   {column.links.map((link) => (
                     <li key={column.title + link.label}>
@@ -99,7 +99,7 @@ export function Footer() {
         </div>
 
         <div className="mt-16 flex flex-col gap-6 border-t border-paper/10 pt-8 lg:flex-row lg:items-center lg:justify-between">
-          <p className="max-w-2xl text-[0.75rem] leading-relaxed text-paper/45">
+          <p className="max-w-2xl text-[0.75rem] leading-relaxed text-paper/50">
             © {new Date().getFullYear()} {SITE.brand}. A preview built on sandbox infrastructure.
             Not a bank and not a licensed money transmitter; no customer funds are held and deposits
             in this build are simulated.
