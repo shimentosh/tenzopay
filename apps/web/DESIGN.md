@@ -97,11 +97,12 @@ rounded-full    50%     → avatars, list-row icon circles
 - Nav item: 20px icon + 14px label, 44px tall, full-width pill. Active =
   `--surface-raised` + 600 + `--content-primary`. **No left accent bar, no
   coloured icons.**
-- Content column **max 832px, centred** in the space beside the rail, 64px top
-  padding. The reference left-aligns it; centred was preferred here, so a wide
-  screen leaves even margins rather than stranding content against one edge.
-  The top bar shares the same measure, so the account chip lines up with the
-  column's right edge instead of drifting to the window edge.
+- **Rail and content are centred together as one unit** — 17.25rem of rail plus
+  the 832px column, capped at 69.25rem and `mx-auto`. The reference
+  left-aligns the column against the window edge; centring reads better here.
+  Centre the column *alone* and the rail stays pinned to the window edge, which
+  makes the two read as separate things rather than one layout — so the cap
+  lives on the wrapper, not on the column.
 - Top bar: no title, no search, no notification cluster — one or two contextual
   pills and the account chip, floating on the page background. Search lives in
   the rail (and ⌘K); notifications and the theme toggle sit in the rail footer.

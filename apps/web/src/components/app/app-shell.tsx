@@ -82,7 +82,12 @@ export function AppShell({
     <div className="min-h-dvh bg-background">
       <EnvironmentBanner config={config} />
 
-      <div className="flex">
+      {/*
+        Rail and content are centred together as one unit: 17.25rem of rail plus
+        the 52rem column. Centring only the column left the rail pinned to the
+        window edge, which read as two separate things rather than one layout.
+      */}
+      <div className="mx-auto flex w-full max-w-[69.25rem]">
         {/*
           Desktop rail. Deliberately the same background as the page, with no
           border and no shadow — it reads as part of the canvas rather than as
@@ -123,9 +128,7 @@ export function AppShell({
             Top bar: no title, no search, no notification cluster. One or two
             contextual pills and the account chip, floating on the page.
           */}
-          {/* Same measure as the content, so the account chip lines up with the
-              right edge of the column instead of drifting to the window edge. */}
-          <header className="mx-auto flex h-16 w-full max-w-[52rem] items-center gap-2 px-4 sm:px-6">
+          <header className="flex h-16 w-full items-center gap-2 px-4 sm:px-6">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
               <SheetTrigger asChild>
                 <Button variant="ghost" size="icon" className="lg:hidden" aria-label="Open menu">
@@ -255,14 +258,12 @@ export function AppShell({
           </header>
 
           {/*
-            A narrow measure is a large part of why this reads as calm, so the
-            column stops at 832px — centred in the space beside the rail, so a
-            wide screen leaves even margins either side rather than stranding
-            the content against one edge.
+            832px of measure, which is what keeps this readable. The width now
+            comes from the centred wrapper above rather than from a cap here.
           */}
           <main
             id="main"
-            className="mx-auto w-full max-w-[52rem] px-4 pb-28 pt-10 sm:px-6 lg:pb-16 lg:pt-16"
+            className="w-full px-4 pb-28 pt-10 sm:px-6 lg:pb-16 lg:pt-16"
           >
             {children}
           </main>
