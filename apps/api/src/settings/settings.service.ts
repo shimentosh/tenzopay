@@ -164,13 +164,35 @@ export const SETTINGS: SettingDefinition[] = [
     roles: ['ADMIN', 'FINANCE'] as AdminRole[],
   },
   {
-    key: 'fee.monthly',
-    label: 'Monthly plan fee',
-    description: 'Recurring charge per account on a paid plan.',
+    key: 'fee.plan.team',
+    label: 'Team plan, monthly',
+    description: 'Charged on the first of each month to accounts on the Team plan.',
     type: 'minor',
     group: 'fee',
     default: '0',
     roles: ['ADMIN', 'FINANCE'] as AdminRole[],
+  },
+  {
+    key: 'fee.plan.business',
+    label: 'Business plan, monthly',
+    description:
+      'Charged on the first of each month. Left at zero, Business accounts are ' +
+      'not billed here at all — the plan is priced case by case and invoiced elsewhere.',
+    type: 'minor',
+    group: 'fee',
+    default: '0',
+    roles: ['ADMIN', 'FINANCE'] as AdminRole[],
+  },
+  {
+    key: 'billing.dunning_days',
+    label: 'Days to retry a failed plan charge',
+    description:
+      'A charge that the balance cannot cover is retried daily for this many days. ' +
+      'After that the account drops to Starter rather than accruing a debt.',
+    type: 'integer',
+    group: 'limits',
+    default: '7',
+    roles: ['ADMIN'] as AdminRole[],
   },
 
   // ---- Operational thresholds. ----

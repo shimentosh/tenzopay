@@ -7,6 +7,7 @@ import { buildConfig } from './config/configuration';
 import { PrismaModule } from './prisma/prisma.module';
 import { LedgerModule } from './ledger/ledger.module';
 import { SettingsModule } from './settings/settings.module';
+import { BillingModule } from './billing/billing.module';
 import { ProvidersModule } from './providers/providers.module';
 import { AuthModule } from './auth/auth.module';
 import { KycModule } from './kyc/kyc.module';
@@ -45,6 +46,7 @@ import { LoggingMiddleware } from './common/logging.middleware';
     PrismaModule,
     SettingsModule,
     LedgerModule,
+    BillingModule,
     ProvidersModule,
     AuthModule,
     KycModule,

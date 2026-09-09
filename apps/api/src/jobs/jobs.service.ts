@@ -6,6 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { LedgerService } from '../ledger/ledger.service';
 import { DepositsService } from '../deposits/deposits.service';
 import { WebhooksService } from '../webhooks/webhooks.service';
+import { BillingService } from '../billing/billing.service';
 import type { AppConfig } from '../config/configuration';
 
 /**
@@ -32,6 +33,7 @@ export class JobsService {
     private readonly ledger: LedgerService,
     private readonly deposits: DepositsService,
     private readonly webhooks: WebhooksService,
+    private readonly billing: BillingService,
     configService: ConfigService<{ app: AppConfig }, true>,
   ) {
     this.config = configService.get('app', { infer: true });
@@ -140,6 +142,27 @@ export class JobsService {
       if (result.reversed > 0) {
         this.logger.error(
           `Re-org watch reversed ${result.reversed} credited deposit(s) of ${result.checked} checked`,
+        );
+      }
+    });
+  }
+
+  /**
+   * Charge monthly plans.
+   *
+   * Daily rather than monthly: an account that could not pay on the first gets
+   * another attempt tomorrow, and a plan started mid-month is picked up on the
+   * next pass. The idempotency key is what prevents a second charge, not the
+   * schedule, so running this more often is harmless.
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_2AM)
+  async chargeMonthlyPlans(): Promise<void> {
+    await this.guard('monthly-plans', async () => {
+      const result = await this.billing.chargeDuePlans();
+      if (result.charged > 0 || result.downgraded > 0 || result.retried > 0) {
+        this.logger.log(
+          `Plan billing: ${result.charged} charged, ${result.retried} awaiting funds, ` +
+            `${result.downgraded} downgraded, of ${result.considered} considered`,
         );
       }
     });

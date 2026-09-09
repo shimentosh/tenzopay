@@ -22,8 +22,9 @@ slow pass must not stack.
 | `pruneSessions` | 1h | Expired refresh tokens accumulating |
 | **`sweepStaleAuthorizations`** | **1h** | **A hold whose closing webhook was lost** |
 | **`watchDepositReorgs`** | **10m** | **A credited deposit re-orged off the chain** |
+| **`chargeMonthlyPlans`** | **daily, 02:00** | **Plan revenue going uncollected** |
 
-The last two are new. What they do and why:
+The last three are new. What the two sweeps do and why:
 
 ### `sweepStaleAuthorizations`
 
@@ -63,23 +64,30 @@ escalation for what is effectively a chargeback against us.
 
 ## Gaps — not built, in priority order
 
-### 1. Monthly plan billing — needs product decisions first
+### 1. ~~Monthly plan billing~~ — BUILT
 
-The setting (`fee.monthly`) and the charging primitive (`LedgerService.chargeFee`)
-both exist. What is missing is not code but answers:
+Three decisions were needed and were taken as follows. They are product
+choices, so change them if you disagree — the code follows from them.
 
-- **Which plan is a user on?** There is no `plan` field on `User`. The marketing
-  site advertises Starter (free), Team ($19), Business (custom), so the enum is
-  implied but not decided.
-- **What happens when the balance will not cover it?** Retry daily and suspend
-  after N failures? Let the balance go negative? Downgrade to Starter? This is
-  a dunning policy, and it is a business decision.
-- **Proration.** Mid-month upgrade: charge the difference, or start the next
-  cycle?
+**A plan is charged once per calendar month**, keyed
+`fee:monthly:<userId>:<YYYY-MM>`, not on a per-account anniversary. There is no
+proration: a plan change takes effect from the next month, so nobody is charged
+twice for one month and a downgrade never needs a refund path.
 
-The job itself is straightforward once those are settled — monthly, idempotency
-key `fee:monthly:<userId>:<YYYY-MM>`, so a re-run inside the same month cannot
-double charge.
+**An unpayable charge creates no debt.** It is retried daily for
+`billing.dunning_days` (default 7) and then the account drops to Starter.
+Letting the balance go negative is right for a chargeback, where the money
+genuinely left, and wrong for a subscription, where it never arrived.
+
+**Business is not billed here** while `fee.plan.business` is zero — it is priced
+case by case, and inventing a number would be worse than charging nothing.
+
+The job runs daily rather than monthly so a failed first-of-month attempt gets
+another try, and a plan started mid-month is picked up on the next pass. The
+idempotency key is what prevents a second charge, not the schedule.
+
+Staff move an account between plans with `POST /admin/users/:id/plan`, which
+demands a reason and writes both an admin action and an audit log.
 
 ### 2. Account lockout expiry — blocked on the lockout itself
 

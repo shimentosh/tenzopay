@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { adminAdjustmentSchema, type AdminAdjustmentInput } from '@tenzopay/shared';
 import { AdminService } from './admin.service';
 import { SettingsService } from '../settings/settings.service';
+import { BillingService } from '../billing/billing.service';
 import { AdminGuard, CurrentAdmin, Roles, type RequestAdmin } from '../auth/guards';
 import { zodPipe } from '../common/zod-validation.pipe';
 
@@ -23,6 +24,10 @@ const settingSchema = reasonSchema.extend({
   value: z.string().min(1).max(40),
 });
 
+const planSchema = reasonSchema.extend({
+  plan: z.enum(['STARTER', 'TEAM', 'BUSINESS']),
+});
+
 const userStatusSchema = reasonSchema.extend({
   status: z.enum(['FROZEN', 'ACTIVE']),
 });
@@ -33,6 +38,7 @@ export class AdminController {
   constructor(
     private readonly admin: AdminService,
     private readonly settings: SettingsService,
+    private readonly billing: BillingService,
   ) {}
 
   @Get('me')
@@ -139,6 +145,27 @@ export class AdminController {
    * Post a signed adjustment. There is deliberately no "set balance" endpoint —
    * see AdminService.adjustBalance.
    */
+  /**
+   * Move an account between plans.
+   *
+   * Takes effect from the next monthly pass: no proration and no immediate
+   * charge, so a downgrade never needs a refund path.
+   */
+  @Post('users/:id/plan')
+  @Roles(AdminRole.ADMIN, AdminRole.FINANCE)
+  async setPlan(
+    @CurrentAdmin() admin: RequestAdmin,
+    @Param('id') id: string,
+    @Body(zodPipe(planSchema)) body: { plan: 'STARTER' | 'TEAM' | 'BUSINESS'; reason: string },
+  ) {
+    return this.billing.setPlan({
+      adminId: admin.id,
+      userId: id,
+      plan: body.plan,
+      reason: body.reason,
+    });
+  }
+
   @Post('ledger/adjust')
   @Roles(AdminRole.FINANCE)
   async adjust(
