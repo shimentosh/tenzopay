@@ -1,6 +1,6 @@
 'use client';
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { AlertTriangle, Check, Copy, ExternalLink, Wallet } from 'lucide-react';
@@ -11,8 +11,6 @@ import {
   Alert,
   Badge,
   EmptyState,
-  Field,
-  Input,
   Panel,
   PanelHeader,
   Skeleton,
@@ -35,10 +33,8 @@ interface DepositInfo {
 }
 
 export default function DepositPage() {
-  const queryClient = useQueryClient();
   const [qr, setQr] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-  const [amount, setAmount] = useState('500');
 
   const { data: info, isLoading, error } = useQuery({
     queryKey: ['deposit-info'],
@@ -49,12 +45,17 @@ export default function DepositPage() {
   const { data: deposits } = useQuery({
     queryKey: ['deposits'],
     queryFn: () => api.get<Paginated<DepositSummary>>('/deposits?limit=20'),
-    // Poll while anything is still confirming, so progress is visible.
+    /**
+     * Nothing on this screen triggers a deposit — it arrives on its own when a
+     * transfer lands on the address. So the feed polls unconditionally, or an
+     * incoming deposit would sit invisible until the user reloaded. Faster
+     * while confirmations are still accruing, since that progress bar moves.
+     */
     refetchInterval: (query) => {
       const rows = query.state.data?.data ?? [];
       return rows.some((d) => d.status === 'DETECTED' || d.status === 'CONFIRMING')
         ? 5_000
-        : false;
+        : 15_000;
     },
   });
 
@@ -70,19 +71,6 @@ export default function DepositPage() {
       .then(setQr)
       .catch(() => setQr(null));
   }, [info?.address]);
-
-  const simulate = useMutation({
-    mutationFn: () => api.post('/deposits/simulate', { amount }),
-    onSuccess: () => {
-      toast.success('Simulated deposit created. Watching for confirmations.');
-      void queryClient.invalidateQueries({ queryKey: ['deposits'] });
-    },
-    onError: (err) => {
-      toast.error(
-        err instanceof ApiError ? err.message : 'Could not simulate a deposit.',
-      );
-    },
-  });
 
   async function copyAddress() {
     if (!info?.address) return;
@@ -121,12 +109,13 @@ export default function DepositPage() {
       </div>
 
       {info?.isDemo ? (
-        <Alert tone="warning" title="Simulated deposits">
+        <Alert tone="warning" title="Demo address — no deposit can arrive here">
           <p>
             This environment runs in demo mode. The address below is not a real
-            blockchain address and cannot receive funds — anything sent to it
-            would be lost. Use the simulator to exercise the full deposit
-            lifecycle.
+            blockchain address: it is not watched by any node, it cannot receive
+            funds, and anything sent to it would be lost. Point{' '}
+            <code>DEPOSIT_MODE</code> at <code>sandbox</code> with a real
+            blockchain provider to receive testnet USDT.
           </p>
         </Alert>
       ) : null}
