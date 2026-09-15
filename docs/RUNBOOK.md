@@ -155,18 +155,26 @@ would mean pretending to monitor a chain we cannot watch.
 
 ## 3. Testing the flows
 
-### Demo deposit (no external service)
+### Deposits
 
-Sign in → **Deposit** → *Simulate deposit*. The deposit runs the real pipeline:
-`DETECTED → CONFIRMING → CONFIRMED`, then posts a ledger credit. The mock chain
-advances one block per second, so 12 confirmations take ~12 s.
+There is no "simulate deposit" button — a deposit is credited only when a
+transfer is actually observed at the address. Crediting is automatic from there:
+detection (webhook, or the five-minute reconciliation sweep) → `DETECTED` →
+`CONFIRMING` → `CONFIRMED` + ledger credit, walked by the 30-second
+confirmation job. Any amount at or above `DEPOSIT_MIN_AMOUNT` (1.00 USDT by
+default) credits; there is no maximum.
+
+`DEPOSIT_MODE=demo` therefore has nothing to exercise: the address is a
+synthetic pseudo-address no node watches, so no deposit will ever arrive. Use
+Sepolia to test the flow end to end.
 
 ### Sepolia deposit
 
 Set `DEPOSIT_MODE=sandbox`, `BLOCKCHAIN_PROVIDER=alchemy`,
 `DEPOSIT_NETWORK=ETHEREUM_SEPOLIA`, and a mock ERC-20 in
 `USDT_CONTRACT_ADDRESS_SEPOLIA`. Send test tokens to the address on the deposit
-screen.
+screen. To exercise confirmations without waiting for 12 blocks, lower
+`DEPOSIT_CONFIRMATIONS`.
 
 ### ASA decisioning
 

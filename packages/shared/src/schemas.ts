@@ -117,13 +117,6 @@ export const transactionQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(25),
 });
 
-/** Demo-mode only. Guarded server-side by DEPOSIT_MODE !== 'production'. */
-export const simulateDepositSchema = z.object({
-  amount: z
-    .string()
-    .regex(/^\d+(\.\d{1,6})?$/, 'Enter an amount with up to 6 decimals'),
-});
-
 export const adminAdjustmentSchema = z.object({
   userId: z.string().uuid(),
   /** Signed decimal string: "100.50" credits, "-100.50" debits. */

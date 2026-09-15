@@ -6,7 +6,6 @@ import { LedgerService } from '../src/ledger/ledger.service';
 import { FeesService } from '../src/ledger/fees.service';
 import { SettingsService } from '../src/settings/settings.service';
 import { DepositsService } from '../src/deposits/deposits.service';
-import { DepositAddressService } from '../src/deposits/deposit-address.service';
 import { MockBlockchainProvider } from '../src/providers/mock/mock-blockchain.provider';
 import { buildConfig } from '../src/config/configuration';
 import type { TokenTransfer } from '../src/providers/blockchain-provider.interface';
@@ -49,8 +48,7 @@ describe('deposit pipeline', () => {
     const settings = new SettingsService(prisma, configService);
     const fees = new FeesService(settings);
     chain = new MockBlockchainProvider(configService);
-    const addresses = new DepositAddressService(prisma, chain, configService);
-    deposits = new DepositsService(prisma, ledger, fees, addresses, chain, configService);
+    deposits = new DepositsService(prisma, ledger, fees, chain, configService);
   });
 
   afterAll(async () => {

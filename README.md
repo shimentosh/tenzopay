@@ -153,7 +153,7 @@ The app runs fully without any external service:
 ```bash
 CARD_PROVIDER=mock          # no Lithic calls
 BLOCKCHAIN_PROVIDER=mock    # simulated chain, 1 block/second
-DEPOSIT_MODE=demo           # simulated deposits, badged in the UI
+DEPOSIT_MODE=demo           # synthetic address, no deposit can arrive
 ```
 
 Config validation **refuses to boot** on unsafe combinations — an invalid setup

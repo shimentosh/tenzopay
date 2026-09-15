@@ -310,7 +310,7 @@ function EnvironmentBanner({ config }: { config?: RuntimeConfig }) {
 
   const parts = [
     config.appEnv === 'development' ? 'Development' : 'Sandbox',
-    config.depositMode === 'demo' ? 'simulated deposits' : `${config.depositMode} deposits`,
+    config.depositMode === 'demo' ? 'demo deposits' : `${config.depositMode} deposits`,
     `${config.cardProvider} cards`,
   ];
 

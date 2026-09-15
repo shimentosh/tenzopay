@@ -264,8 +264,12 @@ account `xpub` at `m/44'/60'/0'/0/{index}`.
 - Sweeping/withdrawal requires signing, and signing requires a custody provider
   (Fireblocks / Turnkey / BitGo). That is **not implemented** and is listed as a missing
   dependency — the interface exists, the capability does not.
-- `DEPOSIT_MODE` gates behaviour: `demo` (simulated credits, badged in the UI),
-  `sandbox` (real Sepolia monitoring), `production` (refuses to start without custody config).
+- `DEPOSIT_MODE` gates behaviour: `demo` (synthetic address nothing watches, so
+  no deposit arrives), `sandbox` (real Sepolia monitoring), `production` (refuses
+  to start without custody config).
+- There is no way to conjure a deposit from the UI or the API. A deposit exists
+  only because a transfer was observed at the address; from detection onward
+  crediting is automatic and needs no user action.
 
 ## 14. Risks
 

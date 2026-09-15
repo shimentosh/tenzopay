@@ -224,8 +224,8 @@ Both funnel into the same idempotent `recordTransfer()`, guarded by
 `UNIQUE(network, txHash, logIndex)`. Credit happens once, at CONFIRMED, in a
 transaction, and sets `deposits.ledgerTransactionId`.
 
-**Modes:** `demo` (simulated, badged) · `sandbox` (real Sepolia) ·
-`production` (refuses to boot without custody — not implemented).
+**Modes:** `demo` (synthetic address, nothing can arrive) · `sandbox` (real
+Sepolia) · `production` (refuses to boot without custody — not implemented).
 
 ---
 

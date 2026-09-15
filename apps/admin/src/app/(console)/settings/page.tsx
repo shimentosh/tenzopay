@@ -176,9 +176,10 @@ export default function ConsoleSettingsPage() {
       </Panel>
 
       {config?.depositMode === 'demo' ? (
-        <Alert tone="warning" title="Demo deposits are enabled">
-          Deposits in this environment are simulated and labelled throughout the
-          customer app. The API refuses to start with demo deposits while
+        <Alert tone="warning" title="Demo deposit mode is enabled">
+          Deposit addresses in this environment are synthetic and watched by no
+          node, so no deposit can arrive and no balance can be funded. The API
+          refuses to start in demo mode while
           <code className="mx-1">APP_ENV=production</code>, so this cannot reach
           a live deployment.
         </Alert>

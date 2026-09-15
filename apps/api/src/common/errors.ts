@@ -105,12 +105,6 @@ export class WebhookVerificationError extends AppError {
   }
 }
 
-export class DepositModeError extends AppError {
-  constructor(message: string) {
-    super('DEPOSIT_MODE_FORBIDDEN', message, HttpStatus.FORBIDDEN);
-  }
-}
-
 export class RateLimitError extends AppError {
   constructor() {
     super(

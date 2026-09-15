@@ -224,38 +224,57 @@ export default function DepositPage() {
           </div>
         </Panel>
 
-        {info?.mode === 'demo' ? (
-          <Panel>
-            <PanelHeader
-              title="Deposit simulator"
-              description="Runs the real detection and confirmation pipeline."
-            />
-            <div className="space-y-4 p-5">
-              <Field label="Amount (USDT)" htmlFor="amount">
-                <Input
-                  id="amount"
-                  inputMode="decimal"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                />
-              </Field>
-
-              <Button
-                className="w-full"
-                loading={simulate.isPending}
-                onClick={() => simulate.mutate()}
-              >
-                Simulate deposit
-              </Button>
-
-              <p className="text-caption leading-relaxed text-muted-foreground">
-                The deposit moves through detection and confirmation exactly as a
-                real one would, then posts a ledger credit. These are not real
-                funds.
-              </p>
-            </div>
-          </Panel>
-        ) : null}
+        <Panel>
+          <PanelHeader
+            title="What happens next"
+            description="Nothing to press — deposits credit themselves."
+          />
+          <div className="p-5">
+            <ol className="space-y-5">
+              {[
+                {
+                  title: 'Send any amount',
+                  body: info
+                    ? `Anything from ${money(info.minimumAmount)} ${info.currency} upwards. There is no maximum.`
+                    : 'There is no maximum.',
+                },
+                {
+                  title: 'We detect it',
+                  // Demo addresses are watched by nothing, and the alert above
+                  // says so — this step must not quietly claim otherwise.
+                  body: info?.isDemo
+                    ? 'In a live environment the address is watched continuously. ' +
+                      'This demo address is not, so nothing will be detected here.'
+                    : 'The address is watched continuously, and swept against the ' +
+                      'chain every few minutes in case a notification is missed.',
+                },
+                {
+                  title: 'Confirmations accrue',
+                  body: info
+                    ? `Your balance updates once the transfer is ${info.requiredConfirmations} blocks deep.`
+                    : 'Your balance updates once the transfer is deep enough to be final.',
+                },
+              ].map((step, i) => (
+                <li key={step.title} className="flex gap-3">
+                  <span
+                    className="tnum mt-px flex size-6 shrink-0 items-center justify-center rounded-full bg-surface-raised-hover text-caption font-semibold text-content-primary"
+                    aria-hidden
+                  >
+                    {i + 1}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-ui font-semibold text-content-primary">
+                      {step.title}
+                    </p>
+                    <p className="mt-0.5 text-caption leading-relaxed text-content-tertiary">
+                      {step.body}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </div>
+        </Panel>
       </div>
 
       <Panel>

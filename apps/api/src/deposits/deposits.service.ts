@@ -16,10 +16,7 @@ import {
   type BlockchainProvider,
   type TokenTransfer,
 } from '../providers/blockchain-provider.interface';
-import { MockBlockchainProvider } from '../providers/mock/mock-blockchain.provider';
-import { DepositAddressService } from './deposit-address.service';
-import { AppError, DepositModeError, NotFoundError } from '../common/errors';
-import { parseAmount } from '@tenzopay/shared';
+import { NotFoundError } from '../common/errors';
 
 /**
  * Deposit detection, confirmation and crediting.
@@ -46,7 +43,6 @@ export class DepositsService {
     private readonly prisma: PrismaService,
     private readonly ledger: LedgerService,
     private readonly fees: FeesService,
-    private readonly addresses: DepositAddressService,
     @Inject(BLOCKCHAIN_PROVIDER) private readonly chain: BlockchainProvider,
     configService: ConfigService<{ app: AppConfig }, true>,
   ) {
@@ -446,54 +442,6 @@ export class DepositsService {
     }
 
     return { found: page.transfers.length, recorded };
-  }
-
-  // ---------------------------------------------------------------- Demo ----
-
-  /**
-   * Simulate an inbound deposit.
-   *
-   * Only reachable when DEPOSIT_MODE=demo. Configuration additionally forbids
-   * demo mode when APP_ENV=production, so this cannot exist in a live
-   * deployment — simulated funds must never be presented as real.
-   */
-  async simulateDeposit(userId: string, amountInput: string) {
-    if (this.config.deposits.mode !== 'demo') {
-      throw new DepositModeError(
-        'Simulated deposits are only available in demo mode.',
-      );
-    }
-
-    const amount = parseAmount(amountInput, 'USDT');
-    if (amount <= 0n) {
-      throw new AppError('INVALID_AMOUNT', 'Enter an amount greater than zero.', 400);
-    }
-    if (amount < this.config.deposits.minAmount) {
-      throw new AppError(
-        'BELOW_MINIMUM',
-        'That amount is below the minimum deposit.',
-        400,
-      );
-    }
-
-    const address = await this.addresses.getOrCreate(userId);
-
-    if (!(this.chain instanceof MockBlockchainProvider)) {
-      throw new DepositModeError(
-        'Simulated deposits require the mock blockchain provider.',
-      );
-    }
-
-    const transfer = await this.chain.simulateTransfer({
-      toAddress: address.address,
-      amount,
-      contractAddress: this.config.deposits.usdtContract || '0xdemo',
-    });
-
-    const depositId = await this.recordTransfer(transfer, DepositSource.DEMO);
-    this.logger.warn(`DEMO deposit simulated for user ${userId}: ${amount} USDT`);
-
-    return { depositId, txHash: transfer.txHash, amount: amount.toString() };
   }
 
   // -------------------------------------------------------------- Queries ----
