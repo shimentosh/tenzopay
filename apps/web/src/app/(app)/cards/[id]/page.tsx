@@ -12,7 +12,10 @@ import {
   Globe,
   Lock,
   Nfc,
+  Pencil,
   Repeat,
+  ShieldAlert,
+  ShieldCheck,
   Snowflake,
   Sun,
   Trash2,
@@ -21,7 +24,7 @@ import { toast } from 'sonner';
 import { api, ApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Alert, EmptyState, Panel, Skeleton, StatusBadge } from '@/components/ui/primitives';
-import { SectionHeader } from '@/components/ui/patterns';
+import { IconButton, SectionHeader } from '@/components/ui/patterns';
 import { VirtualCard } from '@/components/virtual-card';
 import { TransactionList } from '@/components/app/transaction-list';
 import { CardLimitsForm } from '@/components/app/card-limits-form';
@@ -186,6 +189,13 @@ export default function CardDetailPage() {
           <VirtualCard card={card} />
 
           <div className="space-y-7">
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-value font-semibold text-content-primary">Usage</span>
+              <IconButton label="Edit spending limits" href="#limits">
+                <Pencil className="size-4" aria-hidden />
+              </IconButton>
+            </div>
+
             <Usage
               label="Spent today"
               spent={card.spentToday}
@@ -210,7 +220,7 @@ export default function CardDetailPage() {
 
       {/* ---------------------------------------------------------- Limits -- */}
       {!closed ? (
-        <section aria-labelledby="limits-heading" className="space-y-5">
+        <section id="limits" aria-labelledby="limits-heading" className="scroll-mt-8 space-y-5">
           <div id="limits-heading">
             <SectionHeader title="Spending limits" />
           </div>
@@ -219,8 +229,71 @@ export default function CardDetailPage() {
             displayed here. An authorization above any of these is declined at the network, before
             it reaches your balance.
           </p>
-          <div className="rounded-panel bg-surface-raised p-6 md:p-8">
+          <div className="space-y-5 rounded-panel bg-surface-raised p-6 md:p-8">
             <CardLimitsForm card={card} />
+
+            {/*
+              A velocity rule is created SHADOWING at the issuer and does not
+              enforce until it is promoted. That is a silent no-op if it goes
+              wrong, so the state is stated here rather than taken on trust —
+              it is the only part of the old rules panel worth keeping.
+            */}
+            {card.rules.length ? (
+              <p className="flex flex-wrap items-center gap-2 border-t border-hairline pt-5 text-ui text-content-tertiary">
+                {card.rules.every((rule) => rule.state === 'ACTIVE') ? (
+                  <>
+                    <ShieldCheck className="size-4 text-positive" aria-hidden />
+                    {card.rules.length} velocity rule{card.rules.length === 1 ? '' : 's'} active at
+                    the issuer.
+                  </>
+                ) : (
+                  <>
+                    <ShieldAlert className="size-4 text-warning" aria-hidden />
+                    {card.rules.filter((rule) => rule.state !== 'ACTIVE').length} rule(s) are
+                    registered but not yet enforcing.
+                  </>
+                )}
+              </p>
+            ) : null}
+          </div>
+        </section>
+      ) : null}
+
+      {/* ---------------------------------------------------- Transactions -- */}
+      <section aria-labelledby="tx-heading" className="space-y-2">
+        <div id="tx-heading">
+          <SectionHeader title="Transactions" seeAllHref={`/transactions?cardId=${card.id}`} />
+        </div>
+        <TransactionList rows={transactions?.data ?? []} />
+      </section>
+
+      {/* ----------------------------------------------------------- Close -- */}
+      {!closed ? (
+        <section aria-labelledby="close-heading" className="space-y-5">
+          <div id="close-heading">
+            <SectionHeader title="Close this card" />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-panel bg-surface-raised p-6 md:p-8">
+            <p className="max-w-md text-ui text-content-secondary">
+              Permanent. A closed card can never be reopened, and any subscription still billing to
+              it will start failing.
+            </p>
+            <Button
+              variant="destructiveOutline"
+              loading={statusMutation.isPending}
+              onClick={() => {
+                if (
+                  window.confirm(
+                    `Close “${card.name}” permanently? This cannot be undone.`,
+                  )
+                ) {
+                  statusMutation.mutate('close');
+                }
+              }}
+            >
+              <Trash2 aria-hidden />
+              Close card
+            </Button>
           </div>
         </section>
       ) : null}
@@ -271,73 +344,6 @@ export default function CardDetailPage() {
           />
         </div>
       </section>
-
-      {/* ----------------------------------------------------------- Rules -- */}
-      {card.rules.length ? (
-        <section aria-labelledby="rules-heading" className="space-y-5">
-          <div id="rules-heading">
-            <SectionHeader title="Active rules" />
-          </div>
-          <p className="max-w-2xl text-ui text-content-secondary">
-            Enforced by the card issuer on every authorization.
-          </p>
-          <ul className="divide-y divide-hairline rounded-panel bg-surface-raised px-6">
-            {card.rules.map((rule) => (
-              <li key={rule.id} className="flex items-center justify-between gap-4 py-5">
-                <div>
-                  <p className="text-value font-semibold text-content-primary">
-                    {rule.period === 'DAY' ? 'Daily' : 'Monthly'} velocity limit
-                  </p>
-                  <p className="tnum mt-1 text-ui text-content-tertiary">
-                    {rule.limitAmount ? usd(rule.limitAmount) : '—'} per{' '}
-                    {rule.period === 'DAY' ? 'day' : 'month'}
-                  </p>
-                </div>
-                <StatusBadge status={rule.state} />
-              </li>
-            ))}
-          </ul>
-        </section>
-      ) : null}
-
-      {/* ---------------------------------------------------- Transactions -- */}
-      <section aria-labelledby="tx-heading" className="space-y-2">
-        <div id="tx-heading">
-          <SectionHeader title="Transactions" seeAllHref={`/transactions?cardId=${card.id}`} />
-        </div>
-        <TransactionList rows={transactions?.data ?? []} />
-      </section>
-
-      {/* ----------------------------------------------------------- Close -- */}
-      {!closed ? (
-        <section aria-labelledby="close-heading" className="space-y-5">
-          <div id="close-heading">
-            <SectionHeader title="Close this card" />
-          </div>
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-panel bg-surface-raised p-6 md:p-8">
-            <p className="max-w-md text-ui text-content-secondary">
-              Permanent. A closed card can never be reopened, and any subscription still billing to
-              it will start failing.
-            </p>
-            <Button
-              variant="destructiveOutline"
-              loading={statusMutation.isPending}
-              onClick={() => {
-                if (
-                  window.confirm(
-                    `Close “${card.name}” permanently? This cannot be undone.`,
-                  )
-                ) {
-                  statusMutation.mutate('close');
-                }
-              }}
-            >
-              <Trash2 aria-hidden />
-              Close card
-            </Button>
-          </div>
-        </section>
-      ) : null}
 
       <RevealCardDialog
         cardId={card.id}
